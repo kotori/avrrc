@@ -49,6 +49,9 @@ struct __attribute__((packed)) Telemetry {
   bool signalOk; 
 };
 
+Payload payload;
+Telemetry telemetry;
+
 unsigned long lastRecvTime = 0, lastBlinkTime = 0;
 bool ledState = false;
 const byte NEUTRAL = 127;
@@ -180,4 +183,5 @@ void resetPayload() {
   payload.ch3 = fullStop ? 0 : NEUTRAL;
   payload.ch5 = 0;
   payload.ch6 = 0;
+  payload.ch7 = 0;
 }
