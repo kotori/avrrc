@@ -183,47 +183,64 @@ void handle_stealth_trims() {
 }
 
 void read_inputs() {
-  int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2), analogRead(A3)};
+  // --- 1. CAPTURE INPUTS ---
+  int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2),
+                      analogRead(A3)};
   int processed[4];
+  int out[4];  // Intermediate virtual channels
 
-  // 1. Process all 4 stick channels
-  for(int i=0; i<4; i++) {
+  // Map raw sensor data to a standard 0-255 scale
+  for (int i = 0; i < 4; i++) {
     int mi = (i == 0) ? currentModel.xMin : (i == 1) ? currentModel.yMin : 0;
     int ma = (i == 0) ? currentModel.xMax : (i == 1) ? currentModel.yMax : 1023;
     processed[i] = map(rawSticks[i], mi, ma, 0, 255);
-    // Note: Trims are added later to avoid double-trimming in mixer
   }
 
-  // 2. Smoothing Filter for Primary Sticks
+  // Filter jitter on primary control sticks
   smoothCh1 = (smoothCh1 * 0.8) + (processed[0] * 0.2);
   smoothCh2 = (smoothCh2 * 0.8) + (processed[1] * 0.2);
 
-  // 3. Handle Mixer & Payload Assignment
+  // --- 2. MIXER LOGIC (Virtual Mapping) ---
   bool mixerOn = (digitalRead(MIXER_PIN) == LOW);
-  
+
   if (mixerOn) {
+    // TANK MODE: Use primary gimbal for dual-motor steering
     int steering = (int)smoothCh1 - 127;
     int throttle = (int)smoothCh2 - 127;
-    payload.ch1 = (byte)constrain(smoothCh1 + currentModel.trims[0], 0, 255);
-    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255); // Mixed Left
-    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255); // Mixed Right
-    payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
+
+    // Small deadzone to prevent "ghost turning" while driving straight
+    if (abs(steering) < 4) steering = 0;
+
+    out[0] = (int)smoothCh1;             // Virtual Ch1: Rudder
+    out[1] = 127 + throttle + steering;  // Virtual Ch2: Left Motor
+    out[2] = 127 + throttle - steering;  // Virtual Ch3: Right Motor
+    out[3] = processed[3];               // Virtual Ch4: Aux
   } else {
-    payload.ch1 = (byte)constrain(smoothCh1 + currentModel.trims[0], 0, 255);
-    payload.ch2 = (byte)constrain(smoothCh2 + currentModel.trims[1], 0, 255);
-    payload.ch3 = (byte)constrain(processed[2] + currentModel.trims[2], 0, 255);
-    payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
+    // STANDARD MODE: Linear mapping
+    out[0] = (int)smoothCh1;  // Virtual Ch1: Rudder
+    out[1] = (int)smoothCh2;  // Virtual Ch2: Throttle
+    out[2] = processed[2];    // Virtual Ch3: Aux
+    out[3] = processed[3];    // Virtual Ch4: Aux
   }
 
-  // 4. Auxiliary and Digital Channels
-  payload.ch5 = !digitalRead(BUTTON_A_PIN); // Button A
-  payload.ch6 = !digitalRead(BUTTON_B_PIN); // Button B
-  payload.ch7 = mixerOn ? 255 : 0;          // NEW: Sends Mixer State to RX
+  // --- 3. FINAL OUTPUTS (Trims & Constrain) ---
+  // We apply trims and constraints to the "virtual" channels here
+  payload.ch1 = (byte)constrain(out[0] + currentModel.trims[0], 0, 255);
+  payload.ch2 = (byte)constrain(out[1] + currentModel.trims[1], 0, 255);
+  payload.ch3 = (byte)constrain(out[2] + currentModel.trims[2], 0, 255);
+  payload.ch4 = (byte)constrain(out[3] + currentModel.trims[3], 0, 255);
 
-  // 5. Radio Update
+  // Digital/Auxiliary channels
+  payload.ch5 = !digitalRead(BUTTON_A_PIN);
+  payload.ch6 = !digitalRead(BUTTON_B_PIN);
+  payload.ch7 = mixerOn ? 255 : 0;  // Inform RX of Mixer state
+
+  // --- 4. RADIO TRANSMISSION ---
   if (radio.write(&payload, sizeof(Payload))) {
-    linkQuality = map(radio.getARC(), 0, 15, 100, 0); 
-    if (radio.isAckPayloadAvailable()) radio.read(&telemetry, sizeof(telemetry));
+    linkQuality = map(radio.getARC(), 0, 15, 100, 0);
+    if (radio.isAckPayloadAvailable()) {
+      radio.read(&telemetry, sizeof(telemetry));
+    }
   } else {
     linkQuality = 0;
   }
@@ -250,7 +267,7 @@ void handle_battery_alarm() {
 void updateDisplay() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
-  
+
   // Header with Model Name and Link %
   u8g2.setCursor(0, 10);
   u8g2.print("MOD: ");
@@ -283,12 +300,11 @@ void updateDisplay() {
   u8g2.print(selectedTrimChannel + 1);
   u8g2.setCursor(5, 62);
   u8g2.print("VALUE: ");
-  u8g2.print(currentModel.trims[selectedTrimChannel] > 0 ? "+" : ""); 
+  u8g2.print(currentModel.trims[selectedTrimChannel] > 0 ? "+" : "");
   u8g2.print(currentModel.trims[selectedTrimChannel]);
 
   u8g2.sendBuffer();
 }
-
 
 void setup() {
   Serial.begin(9600);
