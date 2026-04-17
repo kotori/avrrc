@@ -248,6 +248,8 @@ void handle_battery_alarm() {
 void updateDisplay() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
+  
+  // Header with Model Name and Link %
   u8g2.setCursor(0, 10);
   u8g2.print("MOD: ");
   u8g2.print(currentModel.name);
@@ -256,6 +258,7 @@ void updateDisplay() {
   u8g2.print("%");
   u8g2.drawLine(0, 13, 128, 13);
 
+  // Telemetry
   float txV = analogRead(TX_BATT_PIN) * (5.0 / 1024.0) * 2.0;
   if (telemetry.signalOk && linkQuality > 0) {
     u8g2.setCursor(0, 30);
@@ -271,16 +274,19 @@ void updateDisplay() {
   u8g2.print(txV, 1);
   u8g2.print("V");
 
+  // Trim Editor Frame
   u8g2.drawFrame(0, 40, 128, 24);
   u8g2.setCursor(5, 52);
-  u8g2.print("TRIM: CH");
+  u8g2.print("TRIM EDIT: CH");
   u8g2.print(selectedTrimChannel + 1);
   u8g2.setCursor(5, 62);
-  u8g2.print("VAL: ");
-  u8g2.print(currentModel.trims[selectedTrimChannel] > 0 ? "+" : "");
+  u8g2.print("VALUE: ");
+  u8g2.print(currentModel.trims[selectedTrimChannel] > 0 ? "+" : ""); 
   u8g2.print(currentModel.trims[selectedTrimChannel]);
+
   u8g2.sendBuffer();
 }
+
 
 void setup() {
   Serial.begin(9600);
