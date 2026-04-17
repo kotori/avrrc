@@ -39,18 +39,47 @@ AVRRC is a custom-engineered 2.4GHz radio system built for the Arduino ecosystem
 
 ---
 
-## ⚓ Receiver (RX) Configuration
-*Supports all 7 channels with integrated failsafe logic.*
+## ⚓ Receiver Connection Map (Arduino Nano / Uno)
+
+The receiver manages the 2.4GHz link, monitors the main battery, and drives up to 7 servos or ESCs.
+
+### 🔌 Servo & ESC Outputs (Channels 1-7)
 
 
-| Pin | Function | Typical Connection |
+| Arduino Pin | Payload Channel | Typical Application |
 | :--- | :--- | :--- |
-| `D2` | **Channel 1** | Rudder Servo |
-| `D3` | **Channel 2** | Main ESC / Left Motor |
-| `D4` | **Channel 3** | Aux Servo / Right Motor |
-| `A0` | **Volt Sense** | 10k/4.7k Divider (3.127x Multiplier) |
-| `A1` | **Failsafe** | **GND** = Full Stop (0) \| **OPEN** = Neutral (127) |
-| `A2` | **Status LED** | Solid = Connected \| Blinking = Signal Lost |
+| **D2** | `ch1` | Rudder Servo (Steering) |
+| **D3** | `ch2` | Main Motor ESC (Throttle) |
+| **D4** | `ch3` | Secondary Motor ESC (Mixer) |
+| **D5** | `ch4` | Auxiliary Servo 1 (Yaw/Pan) |
+| **D6** | `ch5` | Auxiliary Servo 2 (Tilt) |
+| **D7** | `ch6` | Digital Switched Output 1 |
+| **D8** | `ch7` | Digital Switched Output 2 |
+
+### 🛠️ Sensors & Indicators
+
+
+| Arduino Pin | Function | Wiring Note |
+| :--- | :--- | :--- |
+| **A0** | **Voltage Sense** | Center tap of 10k/4.7k divider (Max 15V) |
+| **A1** | **Failsafe / Bind** | Connect to GND to Bind at boot |
+| **A2** | **Status LED** | Connect to LED (+) via 220Ω resistor |
+
+### 📡 nRF24L01+ Radio (Hardware SPI)
+
+
+| nRF24 Pin | Arduino Nano Pin | Wiring Note |
+| :--- | :--- | :--- |
+| **VCC** | **3.3V** | **CRITICAL: DO NOT USE 5V** |
+| **GND** | **GND** | Common ground with Nano |
+| **CE** | **D9** | |
+| **CSN** | **D10** | |
+| **SCK** | **D13** | Hardware SPI Clock |
+| **MOSI** | **D11** | Hardware SPI Data In |
+| **MISO** | **D12** | Hardware SPI Data Out |
+
+> [!CAUTION]
+> **Timer Conflict:** On the Arduino Nano/Uno, using the `Servo` library disables `analogWrite()` (PWM) on **Pins 9 and 10**. This is perfectly fine for your build as these pins are used for the radio's `CE` and `CSN` signals.
 
 ---
 
