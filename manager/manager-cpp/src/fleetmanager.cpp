@@ -2,6 +2,14 @@
 #include <cstring>   // For memset and memcpy
 #include <QThread>   // For sleeping
 #include <QtGlobal>  // For qMin
+#include <QSqlDatabase> // For Sqlite3 access
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QStandardPaths>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 
 FleetManager::FleetManager(QObject *parent) : QObject(parent) {
     // Initialize serial port settings
@@ -83,5 +91,79 @@ bool FleetManager::uploadToTX(QString portName) {
     }
 
     serial.close();
+    return true;
+}
+
+bool FleetManager::initDb() {
+    // Store the DB in the standard Linux local data path (~/.local/share/avrrc/)
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(path);
+
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(path + "/fleet_library.db");
+
+    if (!db.open()) return false;
+
+    QSqlQuery query;
+    // UNIQUE(address) is critical for the INSERT OR REPLACE logic
+    return query.exec(
+        "CREATE TABLE IF NOT EXISTS models ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "last_slot INTEGER, "
+        "name TEXT, "
+        "address TEXT UNIQUE, " 
+        "ch1_trim INTEGER, ch2_trim INTEGER, "
+        "ch3_trim INTEGER, ch4_trim INTEGER, "
+        "xmin INTEGER, xmax INTEGER, ymin INTEGER, ymax INTEGER"
+        ")"
+    );
+}
+
+bool FleetManager::saveToDb() {
+    if (!db.isOpen()) return false;
+
+    QSqlQuery query;
+    db.transaction(); // Critical for performance over 20 rows
+
+    for (int i = 0; i < 20; ++i) {
+        // 'INSERT OR REPLACE' handles the "Upsert" based on the UNIQUE address
+        query.prepare("INSERT OR REPLACE INTO models "
+                      "(last_slot, name, address, ch1_trim, ch2_trim, ch3_trim, ch4_trim, xmin, xmax, ymin, ymax) "
+                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        query.addBindValue(i);
+        query.addBindValue(QString::fromLatin1(localFleet[i].name, 12).trimmed());
+        query.addBindValue(QString::number(localFleet[i].boatAddress, 16)); // Hex string
+        query.addBindValue(localFleet[i].trims[0]);
+        query.addBindValue(localFleet[i].trims[1]);
+        query.addBindValue(localFleet[i].trims[2]);
+        query.addBindValue(localFleet[i].trims[3]);
+        query.addBindValue(localFleet[i].xMin);
+        query.addBindValue(localFleet[i].xMax);
+        query.addBindValue(localFleet[i].yMin);
+        query.addBindValue(localFleet[i].yMax);
+
+        if (!query.exec()) {
+            db.rollback();
+            return false;
+        }
+    }
+    return db.commit();
+}
+
+bool FleetManager::exportToJson(QString filePath) {
+    QJsonArray root;
+    for (int i = 0; i < 20; ++i) {
+        QJsonObject boat;
+        boat["name"] = QString::fromLatin1(localFleet[i].name, 12).trimmed();
+        boat["address"] = QString::number(localFleet[i].boatAddress, 16);
+        boat["trims"] = QJsonArray({localFleet[i].trims[0], localFleet[i].trims[1], 
+                                    localFleet[i].trims[2], localFleet[i].trims[3]});
+        root.append(boat);
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) return false;
+    file.write(QJsonDocument(root).toJson());
     return true;
 }

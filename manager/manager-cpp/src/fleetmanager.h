@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSerialPort>
 #include <QStringList>
+#include <QSqlDatabase>
 #include "model_settings.h"
 
 class FleetManager : public QObject {
@@ -24,6 +25,11 @@ public:
     bool saveToFile(QString fileName);
     bool loadFromFile(QString fileName);
 
+    // Database Actions (Sql)
+    bool initDb();
+    bool saveToDb();
+    bool exportToJson(QString path);
+
 signals:
     void progressUpdated(int percent);
     void statusMessage(QString message);
@@ -31,6 +37,7 @@ signals:
 private:
     QSerialPort serial;
     ModelSettings localFleet[20]; // The actual data storage
+    QSqlDatabase db; // the master database.
 };
 
 #endif // FLEETMANAGER_H

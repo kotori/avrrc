@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Find necessary Qt6 packages
-find_package(Qt6 REQUIRED COMPONENTS Widgets SerialPort)
+find_package(Qt6 REQUIRED COMPONENTS Widgets SerialPort Sql)
 
 # Define source files relative to the src directory
 set(PROJECT_SOURCES
@@ -28,7 +28,7 @@ set(PROJECT_SOURCES
 add_executable(AVRRC_Manager ${PROJECT_SOURCES})
 
 # Link the Qt libraries
-target_link_libraries(AVRRC_Manager PRIVATE Qt6::Widgets Qt6::SerialPort)
+target_link_libraries(AVRRC_Manager PRIVATE Qt6::Widgets Qt6::SerialPort Qt6::Sql)
 
 # Include the src directory so headers can find each other
 target_include_directories(AVRRC_Manager PRIVATE src)
