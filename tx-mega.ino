@@ -184,42 +184,44 @@ void handle_stealth_trims() {
 
 void read_inputs() {
   int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2), analogRead(A3)};
-  float processed;
+  int processed[4];
 
-  // 1. Process and Smooth Ch1 & Ch2 (Primary Gimbal)
-  processed = map(rawSticks[0], currentModel.xMin, currentModel.xMax, 0, 255);
-  processed = map(rawSticks[1], currentModel.yMin, currentModel.yMax, 0, 255);
-  
-  // Smoothing Filter (Alpha = 0.2)
-  smoothCh1 = (smoothCh1 * 0.8) + (processed * 0.2);
-  smoothCh2 = (smoothCh2 * 0.8) + (processed * 0.2);
+  // 1. Process all 4 stick channels
+  for(int i=0; i<4; i++) {
+    int mi = (i == 0) ? currentModel.xMin : (i == 1) ? currentModel.yMin : 0;
+    int ma = (i == 0) ? currentModel.xMax : (i == 1) ? currentModel.yMax : 1023;
+    processed[i] = map(rawSticks[i], mi, ma, 0, 255);
+    // Note: Trims are added later to avoid double-trimming in mixer
+  }
 
-  // 2. Process Ch3 & Ch4 (Aux Gimbal)
-  processed = map(rawSticks[2], 0, 1023, 0, 255);
-  processed = map(rawSticks[3], 0, 1023, 0, 255);
+  // 2. Smoothing Filter for Primary Sticks
+  smoothCh1 = (smoothCh1 * 0.8) + (processed[0] * 0.2);
+  smoothCh2 = (smoothCh2 * 0.8) + (processed[1] * 0.2);
 
-  // 3. Handle Mixer & Payload
+  // 3. Handle Mixer & Payload Assignment
   bool mixerOn = (digitalRead(MIXER_PIN) == LOW);
+  
   if (mixerOn) {
     int steering = (int)smoothCh1 - 127;
     int throttle = (int)smoothCh2 - 127;
-    payload.ch1 = (byte)smoothCh1;
-    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255);
-    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255);
-    payload.ch4 = (byte)constrain(processed + currentModel.trims[3], 0, 255);
+    payload.ch1 = (byte)constrain(smoothCh1 + currentModel.trims[0], 0, 255);
+    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255); // Mixed Left
+    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255); // Mixed Right
+    payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
   } else {
     payload.ch1 = (byte)constrain(smoothCh1 + currentModel.trims[0], 0, 255);
     payload.ch2 = (byte)constrain(smoothCh2 + currentModel.trims[1], 0, 255);
-    payload.ch3 = (byte)constrain(processed + currentModel.trims[2], 0, 255);
-    payload.ch4 = (byte)constrain(processed + currentModel.trims[3], 0, 255);
+    payload.ch3 = (byte)constrain(processed[2] + currentModel.trims[2], 0, 255);
+    payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
   }
 
-  payload.ch5 = !digitalRead(BUTTON_A_PIN);
-  payload.ch6 = !digitalRead(BUTTON_B_PIN);
+  // 4. Auxiliary and Digital Channels
+  payload.ch5 = !digitalRead(BUTTON_A_PIN); // Button A
+  payload.ch6 = !digitalRead(BUTTON_B_PIN); // Button B
+  payload.ch7 = mixerOn ? 255 : 0;          // NEW: Sends Mixer State to RX
 
-  // 4. Update Link Quality (RSSI) based on Radio Performance
+  // 5. Radio Update
   if (radio.write(&payload, sizeof(Payload))) {
-    // ARC returns 0 (perfect) to 15 (max retries). We map this to 100-0%.
     linkQuality = map(radio.getARC(), 0, 15, 100, 0); 
     if (radio.isAckPayloadAvailable()) radio.read(&telemetry, sizeof(telemetry));
   } else {
@@ -355,10 +357,12 @@ void setup() {
 void loop() {
   unsigned long now = millis();
   handle_stealth_trims();
+
   if (now - prevMillis >= 20) {
     prevMillis = now;
     read_inputs();  // Radio write and telemetry read handled here
   }
+
   if (now - prevLcdMillis >= 200) {
     prevLcdMillis = now;
     handle_pc_sync();
