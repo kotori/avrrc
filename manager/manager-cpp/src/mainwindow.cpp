@@ -142,3 +142,40 @@ void MainWindow::updateLibraryListView() {
         ui->libraryList->addItem(item);
     }
 }
+
+void MainWindow::on_deployBtn_clicked() {
+    // 1. Get the selected boat from the Library List
+    QListWidgetItem *libraryItem = ui->libraryList->currentItem();
+    if (!libraryItem) {
+        ui->statusbar->showMessage("Please select a boat from the Library first.");
+        return;
+    }
+
+    // 2. Get the target slot from the Active List
+    int targetSlot = ui->modelList->currentRow();
+    if (targetSlot < 0) {
+        ui->statusbar->showMessage("Please select a target slot in the 'Transmitter Slots' tab.");
+        ui->tabWidget->setCurrentIndex(0); // Switch them back to the first tab to pick a slot
+        return;
+    }
+
+    // 3. Extract the Hex Address we stored in the UserRole earlier
+    QString hexAddress = libraryItem->data(Qt::UserRole).toString();
+
+    // 4. Confirm with the user (Safety first!)
+    QString boatName = libraryItem->text().split(" (").first();
+    auto reply = QMessageBox::question(this, "Deploy Model",
+                                     QString("Overwrite Slot %1 with '%2'?")
+                                     .arg(targetSlot).arg(boatName),
+                                     QMessageBox::Yes|QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        if (fleetManager.deployToSlot(hexAddress, targetSlot)) {
+            refreshActiveListView(); // Update the Slot list text
+            ui->statusbar->showMessage("Deployed " + boatName + " to Slot " + QString::number(targetSlot));
+            ui->tabWidget->setCurrentIndex(0); // Show them the result
+        } else {
+            ui->statusbar->showMessage("Error: Deploy failed.");
+        }
+    }
+}
