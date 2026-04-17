@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSerialPort>
 #include <QStringList>
+#include <QSqlDatabase>
 #include "model_settings.h"
 
 class FleetManager : public QObject {
@@ -19,10 +20,14 @@ public:
     void renameLocalModel(int slot, QString newName);
     void deleteLocalModel(int slot);
     QStringList getLocalModelNames();
+    bool exportToJson(QString fileName);
 
     // File Actions (Move these OUT of signals)
     bool saveToFile(QString fileName);
     bool loadFromFile(QString fileName);
+
+    bool initDb();
+    bool saveToDb();
 
 signals:
     void progressUpdated(int percent);
@@ -31,6 +36,7 @@ signals:
 private:
     QSerialPort serial;
     ModelSettings localFleet[20]; // Array for 20 models
+    QSqlDatabase db; // master sql database.
 };
 
 #endif

@@ -19,6 +19,7 @@ FleetManager::FleetManager(QObject *parent) : QObject(parent) {
     serial.setStopBits(QSerialPort::OneStop);
     serial.setFlowControl(QSerialPort::NoFlowControl);
 
+    initDb();
     // Clear local memory
     memset(localFleet, 0, sizeof(localFleet));
 }
