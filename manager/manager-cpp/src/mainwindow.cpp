@@ -1,4 +1,5 @@
 #include <QInputDialog>
+#include <QFileDialog>
 #include <QMessageBox>
 #include <QSerialPortInfo>
 
@@ -28,7 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->searchEdit, &QLineEdit::textChanged, this, &MainWindow::updateLibraryListView);
 
     // Status Messages: If the logic sends a message, show it in the status bar
-    connect(&fleetManager, &FleetManager::statusMessage, ui->statusbar, &QStatusBar::showMessage);
+    // Use a Lambda to bridge the signal to the status bar
+    connect(&fleetManager, &FleetManager::statusMessage, ui->statusbar, [this](const QString &message) {
+      ui->statusbar->showMessage(message, 5000); // Show message for 5 seconds
+    });
 }
 
 MainWindow::~MainWindow() {
@@ -69,7 +73,7 @@ void MainWindow::on_renameBtn_clicked() {
                                          item->text().split(": ").last(), &ok);
     if (ok && !newName.isEmpty()) {
         fleetManager.renameLocalModel(slot, newName.left(11));
-        refreshListView(); // Refresh the list UI
+        refreshActiveListView();
     }
 }
 
@@ -83,19 +87,7 @@ void MainWindow::on_deleteBtn_clicked() {
                                      QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         fleetManager.deleteLocalModel(slot);
-        refreshListView();
-    }
-}
-
-// Whenever you rename or delete a model,
-//  the screen updates immediately without
-//  you having to re-sync with the transmitter.
-void MainWindow::refreshListView() {
-    ui->modelList->clear();
-    // Assuming fleetManager has a way to return the current names
-    QStringList names = fleetManager.getLocalModelNames();
-    for(int i=0; i<names.size(); ++i) {
-        ui->modelList->addItem(QString("[%1] %2").arg(i).arg(names[i]));
+        refreshActiveListView();
     }
 }
 
@@ -105,7 +97,7 @@ void MainWindow::on_syncGetBtn_clicked() {
 
     ui->statusbar->showMessage("Syncing from Transmitter...");
     if (fleetManager.syncFromTX(port)) {
-        refreshListView();
+        refreshActiveListView();
         ui->statusbar->showMessage("Sync Complete!");
     } else {
         ui->statusbar->showMessage("Sync Failed!");
@@ -177,5 +169,33 @@ void MainWindow::on_deployBtn_clicked() {
         } else {
             ui->statusbar->showMessage("Error: Deploy failed.");
         }
+    }
+}
+
+void MainWindow::on_saveJsonBtn_clicked() {
+    QString fileName = QFileDialog::getSaveFileName(this, "Export Fleet JSON", "", "JSON Files (*.json)");
+    if (!fileName.isEmpty()) {
+        if (fleetManager.saveToFile(fileName)) {
+            ui->statusbar->showMessage("Exported to " + fileName, 5000);
+        }
+    }
+}
+
+void MainWindow::on_loadJsonBtn_clicked() {
+    QString fileName = QFileDialog::getOpenFileName(this, "Import Fleet JSON", "", "JSON Files (*.json)");
+    if (!fileName.isEmpty()) {
+        if (fleetManager.loadFromFile(fileName)) {
+            refreshActiveListView();
+            ui->statusbar->showMessage("Imported " + fileName, 5000);
+        }
+    }
+}
+
+void MainWindow::refreshActiveListView() {
+    ui->modelList->clear();
+    // Fetch the 20 names (with dates) from the SQLite-aware helper
+    QStringList names = fleetManager.getLocalModelNames(); 
+    for(int i = 0; i < names.size(); ++i) {
+        ui->modelList->addItem(names[i]);
     }
 }

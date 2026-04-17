@@ -201,23 +201,6 @@ bool FleetManager::saveToDb() {
     return db.commit();
 }
 
-bool FleetManager::exportToJson(QString filePath) {
-    QJsonArray root;
-    for (int i = 0; i < 20; ++i) {
-        QJsonObject boat;
-        boat["name"] = QString::fromLatin1(localFleet[i].name, 12).trimmed();
-        boat["address"] = QString::number(localFleet[i].boatAddress, 16);
-        boat["trims"] = QJsonArray({localFleet[i].trims[0], localFleet[i].trims[1],
-                                    localFleet[i].trims[2], localFleet[i].trims[3]});
-        root.append(boat);
-    }
-
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) return false;
-    file.write(QJsonDocument(root).toJson());
-    return true;
-}
-
 QList<QVariantMap> FleetManager::getFilteredLibrary(QString filter) {
     QList<QVariantMap> results;
     QSqlQuery query;
@@ -284,7 +267,7 @@ bool FleetManager::loadFromFile(QString fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return false;
 
-    QJsonDocument doc = QJsonDocument::fromJson(file.read());
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
     if (!doc.isArray()) return false;
 
     QJsonArray fleetArray = doc.array();
@@ -318,3 +301,34 @@ bool FleetManager::loadFromFile(QString fileName) {
     }
     return true;
 }
+
+bool FleetManager::saveToFile(QString fileName) {
+    QJsonArray fleetArray;
+    for (int i = 0; i < 20; ++i) {
+        QJsonObject model;
+        model["slot"] = i;
+        model["name"] = QString::fromLatin1(localFleet[i].name, 12).trimmed();
+        model["address"] = QString::number(localFleet[i].boatAddress, 16);
+
+        QJsonArray trims;
+        for(int t=0; t<4; t++) trims.append(localFleet[i].trims[t]);
+        model["trims"] = trims;
+
+        model["xMin"] = localFleet[i].xMin;
+        model["xMax"] = localFleet[i].xMax;
+        model["yMin"] = localFleet[i].yMin;
+        model["yMax"] = localFleet[i].yMax;
+
+        fleetArray.append(model);
+    }
+
+    QJsonDocument doc(fleetArray);
+    QFile file(fileName);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(doc.toJson());
+        file.close();
+        return true;
+    }
+    return false;
+}
+

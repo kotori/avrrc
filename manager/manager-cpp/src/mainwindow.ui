@@ -8,8 +8,6 @@
   <property name="windowTitle"><string>AVRRC Stealth Brick Manager</string></property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="mainLayout">
-    
-    <!-- Top Row: Global Port Connection -->
     <item>
      <layout class="QHBoxLayout" name="portLayout">
       <item><widget class="QLabel" name="label"><property name="text"><string>Serial Port:</string></property></widget></item>
@@ -17,13 +15,8 @@
       <item><widget class="QPushButton" name="refreshBtn"><property name="text"><string>Refresh</string></property></widget></item>
      </layout>
     </item>
-
-    <!-- Tab Widget for Active vs Library -->
     <item>
      <widget class="QTabWidget" name="tabWidget">
-      <property name="currentIndex"><number>0</number></property>
-      
-      <!-- TAB 1: ACTIVE TRANSMITTER SLOTS -->
       <widget class="QWidget" name="activeTab">
        <attribute name="title"><string>Transmitter Slots (20)</string></attribute>
        <layout class="QVBoxLayout" name="activeLayout">
@@ -38,8 +31,6 @@
         </item>
        </layout>
       </widget>
-
-      <!-- TAB 2: INFINITE LIBRARY (SQLite) -->
       <widget class="QWidget" name="libraryTab">
        <attribute name="title"><string>Infinite Library (SQL)</string></attribute>
        <layout class="QVBoxLayout" name="libraryLayout">
@@ -59,13 +50,11 @@
         </item>
        </layout>
       </widget>
-
      </widget>
     </item>
-
     <item><widget class="QProgressBar" name="progressBar"/></item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
-</ui
+</ui>
