@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="700">
+  <!-- Stealth Perimeter (8" x 7" with Faceted Corners) -->
+  <path d="M 150,50 L 650,50 L 750,150 L 750,550 L 650,650 L 150,650 L 50,550 L 50,150 Z" 
+        fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Widely Spaced Gimbals (Lower Half) -->
+  <circle cx="210" cy="480" r="85" fill="none" stroke="red" stroke-width="2"/>
+  <circle cx="590" cy="480" r="85" fill="none" stroke="red" stroke-width="2"/>
+  
+  <!-- High-Mounted OLED Dashboard -->
+  <rect x="330" y="100" width="140" height="90" fill="none" stroke="blue" stroke-width="2"/>
+  
+  <!-- Trim Console (3 Buttons directly below OLED) -->
+  <circle cx="330" cy="220" r="15" fill="none" stroke="purple" stroke-width="2"/>
+  <circle cx="400" cy="220" r="15" fill="none" stroke="purple" stroke-width="2"/>
+  <circle cx="470" cy="220" r="15" fill="none" stroke="purple" stroke-width="2"/>
+
+  <!-- Secondary Function Buttons (D2 / D3 - Side Positions) -->
+  <circle cx="340" cy="400" r="15" fill="none" stroke="green" stroke-width="2"/>
+  <circle cx="460" cy="400" r="15" fill="none" stroke="green" stroke-width="2"/>
+</svg>
