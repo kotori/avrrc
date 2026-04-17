@@ -56,23 +56,40 @@ void FleetManager::deleteLocalModel(int slot) {
 
 bool FleetManager::syncFromTX(QString portName) {
     serial.setPortName(portName);
-    if (!serial.open(QIODevice::ReadWrite)) return false;
+    serial.setBaudRate(QSerialPort::Baud9600);
+    
+    if (!serial.open(QIODevice::ReadWrite)) {
+        emit statusMessage("Error: Could not open " + portName);
+        return false;
+    }
 
-    serial.write("G"); // Send Get command
+    // 1. Flush buffers and send the 'G'et command
+    serial.clear();
+    serial.write("G");
+    if (!serial.waitForBytesWritten(1000)) return false;
 
+    // 2. Receive 20 models sequentially
     for (int i = 0; i < 20; ++i) {
-        // Wait for 44 bytes per model
-        while (serial.bytesAvailable() < sizeof(ModelSettings)) {
-            if (!serial.waitForReadyRead(2000)) {
+        char* buffer = reinterpret_cast<char*>(&localFleet[i]);
+        qint64 bytesToRead = sizeof(ModelSettings);
+        qint64 totalRead = 0;
+
+        // Loop until the full 44-byte struct is captured for this slot
+        while (totalRead < bytesToRead) {
+            if (!serial.waitForReadyRead(3000)) { // 3-second timeout safety
+                emit statusMessage("Error: Sync timed out at model " + QString::number(i));
                 serial.close();
                 return false;
             }
+            qint64 chunk = serial.read(buffer + totalRead, bytesToRead - totalRead);
+            if (chunk < 0) { serial.close(); return false; }
+            totalRead += chunk;
         }
-        serial.read(reinterpret_cast<char*>(&localFleet[i]), sizeof(ModelSettings));
         emit progressUpdated(((i + 1) * 100) / 20);
     }
 
     serial.close();
+    saveToDb(); // Persistent SQL backup
     return true;
 }
 
@@ -80,13 +97,22 @@ bool FleetManager::uploadToTX(QString portName) {
     serial.setPortName(portName);
     if (!serial.open(QIODevice::ReadWrite)) return false;
 
-    serial.write("S"); // Send Set command
-    // Small delay to let Arduino enter Sync Mode
+    // 1. Enter Sync Mode
+    serial.write("S");
+    serial.waitForBytesWritten(1000);
+    
+    // Give the Mega 100ms to enter its 'S' loop and clear its buzzer
     QThread::msleep(100); 
 
     for (int i = 0; i < 20; ++i) {
-        serial.write(reinterpret_cast<const char*>(&localFleet[i]), sizeof(ModelSettings));
-        serial.waitForBytesWritten(1000);
+        const char* buffer = reinterpret_cast<const char*>(&localFleet[i]);
+        serial.write(buffer, sizeof(ModelSettings));
+        
+        // Wait for hardware buffer to empty before sending the next boat
+        if (!serial.waitForBytesWritten(1000)) {
+            serial.close();
+            return false;
+        }
         emit progressUpdated(((i + 1) * 100) / 20);
     }
 
