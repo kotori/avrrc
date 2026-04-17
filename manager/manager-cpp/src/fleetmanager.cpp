@@ -25,14 +25,26 @@ FleetManager::FleetManager(QObject *parent) : QObject(parent) {
 }
 
 QStringList FleetManager::getLocalModelNames() {
-    QStringList names;
+    QStringList displayList;
+
     for (int i = 0; i < 20; ++i) {
-        // Create a string from the 12-char name array
-        QString name = QString::fromLatin1(localFleet[i].name, 12).trimmed();
-        if (name.isEmpty()) name = "---";
-        names.append(name);
+        QSqlQuery query;
+        query.prepare("SELECT name, last_synced FROM models WHERE last_slot = ?");
+        query.addBindValue(i);
+
+        QString displayName;
+        if (query.exec() && query.next()) {
+            QString name = query.value(0).toString();
+            // Format the timestamp to be shorter (e.g., 2024-05-20)
+            QString date = query.value(1).toDateTime().toString("yyyy-MM-dd");
+            displayName = QString("[%1] %2 (%3)").arg(i).arg(name).arg(date);
+        } else {
+            // Fallback for empty slots
+            displayName = QString("[%1] --- Empty Slot ---").arg(i);
+        }
+        displayList.append(displayName);
     }
-    return names;
+    return displayList;
 }
 
 void FleetManager::renameLocalModel(int slot, QString newName) {
@@ -137,17 +149,22 @@ bool FleetManager::initDb() {
     if (!db.open()) return false;
 
     QSqlQuery query;
-    // UNIQUE(address) is critical for the INSERT OR REPLACE logic
+    // PRIMARY KEY(address) is critical for the INSERT OR REPLACE logic
     return query.exec(
-        "CREATE TABLE IF NOT EXISTS models ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "last_slot INTEGER, "
-        "name TEXT, "
-        "address TEXT UNIQUE, " 
-        "ch1_trim INTEGER, ch2_trim INTEGER, "
-        "ch3_trim INTEGER, ch4_trim INTEGER, "
-        "xmin INTEGER, xmax INTEGER, ymin INTEGER, ymax INTEGER"
-        ")"
+      "CREATE TABLE IF NOT EXISTS models ("
+      "address TEXT PRIMARY KEY, "
+      "last_slot INTEGER, "
+      "name TEXT, "
+      "ch1_trim INTEGER, "
+      "ch2_trim INTEGER, "
+      "ch3_trim INTEGER, "
+      "ch4_trim INTEGER, "
+      "xmin INTEGER, "
+      "xmax INTEGER, "
+      "ymin INTEGER, "
+      "ymax INTEGER, "
+      "last_synced DATETIME DEFAULT CURRENT_TIMESTAMP"
+      ")"
     );
 }
 
@@ -160,8 +177,9 @@ bool FleetManager::saveToDb() {
     for (int i = 0; i < 20; ++i) {
         // 'INSERT OR REPLACE' handles the "Upsert" based on the UNIQUE address
         query.prepare("INSERT OR REPLACE INTO models "
-                      "(last_slot, name, address, ch1_trim, ch2_trim, ch3_trim, ch4_trim, xmin, xmax, ymin, ymax) "
-                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          "(last_slot, name, address, ch1_trim, ch2_trim, ch3_trim, ch4_trim, "
+          "xmin, xmax, ymin, ymax, last_synced) "
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
 
         query.addBindValue(i);
         query.addBindValue(QString::fromLatin1(localFleet[i].name, 12).trimmed());
