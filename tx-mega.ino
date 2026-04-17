@@ -254,27 +254,44 @@ void handle_battery_alarm() {
 void updateDisplay() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
+
+  // Header
   u8g2.setCursor(0, 10);
   u8g2.print("MOD: ");
   u8g2.print(currentModel.name);
+  u8g2.setCursor(95, 10);
+  u8g2.print(linkQuality);
+  u8g2.print("%");
   u8g2.drawLine(0, 13, 128, 13);
+
+  // Telemetry Row
   float txV = analogRead(TX_BATT_PIN) * (5.0 / 1024.0) * 2.0;
-  u8g2.setCursor(0, 30);
-  u8g2.print("RX: ");
-  u8g2.print(telemetry.voltage, 1);
-  u8g2.print("V");
-  u8g2.setCursor(70, 30);
-  u8g2.print("TX: ");
+  
+  if (telemetry.signalOk && linkQuality > 0) {
+    u8g2.setCursor(0, 30);
+    u8g2.print("RX: ");
+    u8g2.print(telemetry.voltage, 1);
+    u8g2.print("V");
+  } else {
+    u8g2.setCursor(0, 30);
+    u8g2.print("--- NO LINK ---");
+  }
+  
+  u8g2.setCursor(85, 30);
+  u8g2.print("TX:");
   u8g2.print(txV, 1);
   u8g2.print("V");
+
+  // Trim Menu
   u8g2.drawFrame(0, 40, 128, 24);
   u8g2.setCursor(5, 52);
-  u8g2.print("TRIM: CH");
+  u8g2.print("TRIM EDIT: CH");
   u8g2.print(selectedTrimChannel + 1);
   u8g2.setCursor(5, 62);
-  u8g2.print("VAL: ");
+  u8g2.print("VALUE: ");
   u8g2.print(currentModel.trims[selectedTrimChannel] > 0 ? "+" : "");
   u8g2.print(currentModel.trims[selectedTrimChannel]);
+
   u8g2.sendBuffer();
 }
 
