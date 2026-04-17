@@ -11,11 +11,24 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Scan for Arduinos immediately on startup
+    // 1. Initial Device Scan
     refreshPorts();
 
-    // Connect logic signals to UI (Optional but recommended)
+    // 2. Initial UI Population
+    // Pull current data from the local memory and the SQL database
+    refreshActiveListView();
+    updateLibraryListView();
+
+    // 3. Connect Signals & Slots
+    
+    // Progress Bar: Link FleetManager's progress to the UI bar
     connect(&fleetManager, &FleetManager::progressUpdated, ui->progressBar, &QProgressBar::setValue);
+
+    // Search Bar: Every time the user types, filter the Library Tab
+    connect(ui->searchEdit, &QLineEdit::textChanged, this, &MainWindow::updateLibraryListView);
+
+    // Status Messages: If the logic sends a message, show it in the status bar
+    connect(&fleetManager, &FleetManager::statusMessage, ui->statusbar, &QStatusBar::showMessage);
 }
 
 MainWindow::~MainWindow() {
@@ -108,5 +121,24 @@ void MainWindow::on_syncSetBtn_clicked() {
         ui->statusbar->showMessage("Upload Successful!");
     } else {
         ui->statusbar->showMessage("Upload Failed!");
+    }
+}
+
+void MainWindow::updateLibraryListView() {
+    ui->libraryList->clear();
+    QString filter = ui->searchEdit->text();
+    
+    // Get filtered list from database
+    QList<QVariantMap> boats = fleetManager.getFilteredLibrary(filter);
+    
+    for (const auto &boat : boats) {
+        QString itemText = QString("%1 (%2) - Last Synced: %3")
+            .arg(boat["name"].toString())
+            .arg(boat["address"].toString())
+            .arg(boat["date"].toString());
+            
+        QListWidgetItem *item = new QListWidgetItem(itemText);
+        item->setData(Qt::UserRole, boat["address"].toString()); // Store Hex ID for "Deploy"
+        ui->libraryList->addItem(item);
     }
 }

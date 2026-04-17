@@ -207,7 +207,7 @@ bool FleetManager::exportToJson(QString filePath) {
         QJsonObject boat;
         boat["name"] = QString::fromLatin1(localFleet[i].name, 12).trimmed();
         boat["address"] = QString::number(localFleet[i].boatAddress, 16);
-        boat["trims"] = QJsonArray({localFleet[i].trims[0], localFleet[i].trims[1], 
+        boat["trims"] = QJsonArray({localFleet[i].trims[0], localFleet[i].trims[1],
                                     localFleet[i].trims[2], localFleet[i].trims[3]});
         root.append(boat);
     }
@@ -215,5 +215,106 @@ bool FleetManager::exportToJson(QString filePath) {
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly)) return false;
     file.write(QJsonDocument(root).toJson());
+    return true;
+}
+
+QList<QVariantMap> FleetManager::getFilteredLibrary(QString filter) {
+    QList<QVariantMap> results;
+    QSqlQuery query;
+
+    // Use SQL LIKE to search both name and hex address
+    query.prepare("SELECT name, address, last_synced FROM models "
+                  "WHERE name LIKE ? OR address LIKE ? "
+                  "ORDER BY last_synced DESC");
+
+    QString pattern = "%" + filter + "%";
+    query.addBindValue(pattern);
+    query.addBindValue(pattern);
+
+    if (query.exec()) {
+        while (query.next()) {
+            QVariantMap boat;
+            boat["name"] = query.value(0).toString();
+            boat["address"] = query.value(1).toString();
+            boat["date"] = query.value(2).toDateTime().toString("yyyy-MM-dd");
+            results.append(boat);
+        }
+    }
+    return results;
+}
+
+// Moves a model from the SQL Library into the local 20-slot array
+bool FleetManager::deployToSlot(QString hexAddress, int targetSlot) {
+    if (targetSlot < 0 || targetSlot >= 20) return false;
+
+    QSqlQuery query;
+    query.prepare("SELECT name, xmin, xmax, ymin, ymax, ch1_trim, ch2_trim, ch3_trim, ch4_trim "
+                  "FROM models WHERE address = ?");
+    query.addBindValue(hexAddress);
+
+    if (query.exec() && query.next()) {
+        ModelSettings &m = localFleet[targetSlot];
+
+        // 1. Identity & Name
+        memset(m.name, 0, 12);
+        QByteArray nameBytes = query.value(0).toString().toLatin1();
+        memcpy(m.name, nameBytes.data(), qMin(nameBytes.length(), 11));
+
+        m.boatAddress = hexAddress.toULongLong(nullptr, 16);
+
+        // 2. Calibration Bounds
+        m.xMin = query.value(1).toInt();
+        m.xMax = query.value(2).toInt();
+        m.yMin = query.value(3).toInt();
+        m.yMax = query.value(4).toInt();
+
+        // 3. Trims
+        m.trims[0] = query.value(5).toInt();
+        m.trims[1] = query.value(6).toInt();
+        m.trims[2] = query.value(7).toInt();
+        m.trims[3] = query.value(8).toInt();
+
+        return true;
+    }
+    return false;
+}
+
+// Imports a JSON backup into the local 20-slot array
+bool FleetManager::loadFromFile(QString fileName) {
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) return false;
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.read());
+    if (!doc.isArray()) return false;
+
+    QJsonArray fleetArray = doc.array();
+    // Clear current local memory first
+    memset(localFleet, 0, sizeof(localFleet));
+
+    for (int i = 0; i < qMin(fleetArray.size(), 20); ++i) {
+        QJsonObject obj = fleetArray[i].toObject();
+        ModelSettings &m = localFleet[i];
+
+        // Copy name
+        QByteArray nameBytes = obj["name"].toString().toLatin1();
+        memcpy(m.name, nameBytes.data(), qMin(nameBytes.length(), 11));
+
+        // Copy Address (Hex back to uint64)
+        m.boatAddress = obj["address"].toString().toULongLong(nullptr, 16);
+
+        // Copy Trims if they exist in the JSON
+        if (obj.contains("trims")) {
+            QJsonArray trims = obj["trims"].toArray();
+            for(int t=0; t < qMin(trims.size(), 4); t++) {
+                m.trims[t] = trims[t].toInt();
+            }
+        }
+
+        // Set default calibration if not in JSON
+        m.xMin = obj.value("xMin").toInt(0);
+        m.xMax = obj.value("xMax").toInt(1023);
+        m.yMin = obj.value("yMin").toInt(0);
+        m.yMax = obj.value("yMax").toInt(1023);
+    }
     return true;
 }
