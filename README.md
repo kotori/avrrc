@@ -272,8 +272,6 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
 </svg>
 ```
 
----
-
 ## 🎮 Transmitter Schematic (Advanced TX)
 
 ### 📐 Transmitter Schematic (SVG)
@@ -310,8 +308,6 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
   <rect x="750" y="50" width="120" height="60" fill="#fffacd" stroke="#000000"/><text x="760" y="85" font-family="Arial" font-size="12">10k/10k Tap (A15)</text>
 </svg>
 ```
-
----
 
 ## 🎮 Receiver Schematic (Nano)
 
