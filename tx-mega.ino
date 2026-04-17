@@ -203,24 +203,24 @@ void read_inputs() {
   // --- 2. MIXER LOGIC (Virtual Mapping) ---
   bool mixerOn = (digitalRead(MIXER_PIN) == LOW);
 
+  // The entire Right Stick can be used for a camera gimbal (Pan on Ch3, Tilt on Ch4) when you aren't in Tank Mode.
   if (mixerOn) {
-    // TANK MODE: Use primary gimbal for dual-motor steering
-    int steering = (int)smoothCh1 - 127;
-    int throttle = (int)smoothCh2 - 127;
+    // TANK MODE: Left Stick (A0/A1) drives both motors
+    int steering = (int)smoothCh1 - 127; // A0
+    int throttle = (int)smoothCh2 - 127; // A1
+    if (abs(steering) < 5) steering = 0;
 
-    // Small deadzone to prevent "ghost turning" while driving straight
-    if (abs(steering) < 4) steering = 0;
-
-    out[0] = (int)smoothCh1;             // Virtual Ch1: Rudder
-    out[1] = 127 + throttle + steering;  // Virtual Ch2: Left Motor
-    out[2] = 127 + throttle - steering;  // Virtual Ch3: Right Motor
-    out[3] = processed[3];               // Virtual Ch4: Aux
-  } else {
-    // STANDARD MODE: Linear mapping
-    out[0] = (int)smoothCh1;  // Virtual Ch1: Rudder
-    out[1] = (int)smoothCh2;  // Virtual Ch2: Throttle
-    out[2] = processed[2];    // Virtual Ch3: Aux
-    out[3] = processed[3];    // Virtual Ch4: Aux
+    out[0] = (int)smoothCh1;             // Ch1: Physical Rudder
+    out[1] = 127 + throttle + steering;  // Ch2: Left Motor ESC
+    out[2] = 127 + throttle - steering;  // Ch3: Right Motor ESC
+    out[3] = processed[3];               // Ch4: Aux (Right Stick Y)
+  } 
+  else {
+    // STANDARD MODE: Left Stick (A1) is Throttle, Right Stick (A2) is Aux
+    out[0] = (int)smoothCh1;             // Ch1: Physical Rudder (Left Stick X)
+    out[1] = (int)smoothCh2;             // Ch2: Main Throttle (Left Stick Y)
+    out[2] = processed[2];               // Ch3: Aux 1 (Right Stick X)
+    out[3] = processed[3];               // Ch4: Aux 2 (Right Stick Y)
   }
 
   // --- 3. FINAL OUTPUTS (Trims & Constrain) ---
