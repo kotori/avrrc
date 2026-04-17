@@ -3,10 +3,13 @@
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>800</width><height>600</height></rect>
+   <rect><x>0</x><y>0</y><width>800</width><height>650</height></rect>
   </property>
+  <property name="windowTitle"><string>AVRRC Stealth Brick Manager</string></property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="mainLayout">
+    
+    <!-- Top Row: Global Port Connection -->
     <item>
      <layout class="QHBoxLayout" name="portLayout">
       <item><widget class="QLabel" name="label"><property name="text"><string>Serial Port:</string></property></widget></item>
@@ -14,20 +17,55 @@
       <item><widget class="QPushButton" name="refreshBtn"><property name="text"><string>Refresh</string></property></widget></item>
      </layout>
     </item>
-    <item><widget class="QListWidget" name="modelList"/></item>
-    <item><widget class="QProgressBar" name="progressBar"/></item>
+
+    <!-- Tab Widget for Active vs Library -->
     <item>
-     <layout class="QGridLayout" name="buttonGrid">
-      <item row="0" column="0"><widget class="QPushButton" name="syncGetBtn"><property name="text"><string>Sync from TX</string></property></widget></item>
-      <item row="0" column="1"><widget class="QPushButton" name="syncSetBtn"><property name="text"><string>Upload to TX</string></property></widget></item>
-      <item row="1" column="0"><widget class="QPushButton" name="renameBtn"><property name="text"><string>Rename</string></property></widget></item>
-      <item row="1" column="1"><widget class="QPushButton" name="deleteBtn"><property name="text"><string>Delete</string></property></widget></item>
-      <item row="2" column="0"><widget class="QPushButton" name="saveJsonBtn"><property name="text"><string>Save JSON</string></property></widget></item>
-      <item row="2" column="1"><widget class="QPushButton" name="loadJsonBtn"><property name="text"><string>Load JSON</string></property></widget></item>
-     </layout>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex"><number>0</number></property>
+      
+      <!-- TAB 1: ACTIVE TRANSMITTER SLOTS -->
+      <widget class="QWidget" name="activeTab">
+       <attribute name="title"><string>Transmitter Slots (20)</string></attribute>
+       <layout class="QVBoxLayout" name="activeLayout">
+        <item><widget class="QListWidget" name="modelList"/></item>
+        <item>
+         <layout class="QGridLayout" name="activeButtonGrid">
+          <item row="0" column="0"><widget class="QPushButton" name="syncGetBtn"><property name="text"><string>Sync from TX</string></property></widget></item>
+          <item row="0" column="1"><widget class="QPushButton" name="syncSetBtn"><property name="text"><string>Upload to TX</string></property></widget></item>
+          <item row="1" column="0"><widget class="QPushButton" name="renameBtn"><property name="text"><string>Rename</string></property></widget></item>
+          <item row="1" column="1"><widget class="QPushButton" name="deleteBtn"><property name="text"><string>Delete</string></property></widget></item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+
+      <!-- TAB 2: INFINITE LIBRARY (SQLite) -->
+      <widget class="QWidget" name="libraryTab">
+       <attribute name="title"><string>Infinite Library (SQL)</string></attribute>
+       <layout class="QVBoxLayout" name="libraryLayout">
+        <item>
+         <layout class="QHBoxLayout" name="searchLayout">
+          <item><widget class="QLabel" name="searchLabel"><property name="text"><string>Search:</string></property></widget></item>
+          <item><widget class="QLineEdit" name="searchEdit"><property name="placeholderText"><string>Filter by name or address...</string></property></widget></item>
+         </layout>
+        </item>
+        <item><widget class="QListWidget" name="libraryList"/></item>
+        <item>
+         <layout class="QHBoxLayout" name="libButtonLayout">
+          <item><widget class="QPushButton" name="deployBtn"><property name="text"><string>Deploy Selected to Slot</string></property></widget></item>
+          <item><widget class="QPushButton" name="saveJsonBtn"><property name="text"><string>Export JSON</string></property></widget></item>
+          <item><widget class="QPushButton" name="loadJsonBtn"><property name="text"><string>Import JSON</string></property></widget></item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+
+     </widget>
     </item>
+
+    <item><widget class="QProgressBar" name="progressBar"/></item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
-</ui>
+</ui
