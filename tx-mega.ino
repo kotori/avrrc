@@ -23,50 +23,48 @@
         6   ->    D3 [switch/pot input 2]
         7   ->    A4 [switch/pot input 3]
 */
-
 #include <EEPROM.h>
 #include <RF24.h>
 #include <SPI.h>
 #include <U8g2lib.h>
 #include <nRF24L01.h>
 
-// --- STRUCTURES ---
+// --- PACKED STRUCTURES (Ensure bit-perfect sync with Linux/RX) ---
 struct __attribute__((packed)) ModelSettings {
   char name[12];
-  uint64_t boatAddress; 
+  uint64_t boatAddress;
   int xMin, xMax, yMin, yMax;
   int trims[4];
-};
+} currentModel;
 
-struct __attribute__((packed)) Payload { 
-  byte ch1, ch2, ch3, ch4, ch5, ch6, ch7; 
-};
+struct __attribute__((packed)) Payload {
+  byte ch1, ch2, ch3, ch4, ch5, ch6, ch7;
+} payload;
 
-struct __attribute__((packed)) Telemetry { 
-  float voltage; 
-  bool signalOk; 
-};
-
-ModelSettings currentModel; // Instance of the packed struct
-Payload payload;
-Telemetry telemetry;
+struct __attribute__((packed)) Telemetry {
+  float voltage;
+  bool signalOk;
+} telemetry;
 
 // --- PINS (Advanced Mega Config) ---
-const int BUTTON_A_PIN = 2;  // Calibration / Bind
-const int BUTTON_B_PIN = 3;  // Model Select / Bind
-const int MIXER_PIN = 4;     // GND = ON
+const int BUTTON_A_PIN = 2;
+const int BUTTON_B_PIN = 3;
+const int MIXER_PIN = 4;
 const int BUZZER_PIN = 5;
 const int TRIM_PLUS = 6;
 const int TRIM_MINUS = 7;
 const int TRIM_SELECT = 8;
-const int TX_BATT_PIN = A15;  // 10k/10k divider
+const int TX_BATT_PIN = A15;
 
 // --- GLOBALS ---
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 RF24 radio(9, 10);
+
 int activeIndex = 0;
 int selectedTrimChannel = 0;
+int linkQuality = 0;
 unsigned long prevMillis = 0, prevLcdMillis = 0, lastTrimPress = 0;
+float smoothCh1 = 127.0, smoothCh2 = 127.0;  // Smoothing filters
 bool trimChanged = false;
 
 // --- HELPERS ---
@@ -77,7 +75,7 @@ void saveModel(int idx) {
   EEPROM.put(idx * sizeof(ModelSettings), currentModel);
 }
 
-// --- BINDING MODE (Broadcast unique ID on a common channel) ---
+// --- BINDING MODE ---
 void handle_binding() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
@@ -88,18 +86,18 @@ void handle_binding() {
   u8g2.sendBuffer();
 
   radio.stopListening();
-  radio.openWritingPipe(0x0000000001LL);  // Dedicated Bind Channel
+  radio.openWritingPipe(0x0000000001LL);
 
   unsigned long start = millis();
-  while (millis() - start < 10000) {  // Broadcast for 10 seconds
+  while (millis() - start < 10000) {
     radio.write(&currentModel.boatAddress, sizeof(currentModel.boatAddress));
     tone(BUZZER_PIN, 2000, 50);
     delay(250);
   }
-  tone(BUZZER_PIN, 1500, 500);  // Finished
+  tone(BUZZER_PIN, 1500, 500);
 }
 
-// --- LINUX COMPANION SYNC ---
+// --- LINUX SYNC PROTOCOL ---
 void handle_pc_sync() {
   if (Serial.available() < 1) return;
   char cmd = Serial.read();
@@ -185,30 +183,28 @@ void handle_stealth_trims() {
 }
 
 void read_inputs() {
-  int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2), analogRead(A3)};
-  int processed[4];
+  int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2),
+                      analogRead(A3)};
+  float processed[4];
 
-  // 1. Process and Smooth Ch1 & Ch2 (Primary Gimbal)
-  // mi/ma uses your calibration variables for precision
-  processed[0] = map(rawSticks[0], currentModel.xMin, currentModel.xMax, 0, 255);
-  processed[1] = map(rawSticks[1], currentModel.yMin, currentModel.yMax, 0, 255);
-  
-  // Exponential Moving Average smoothing (Alpha = 0.2)
+  // Map and Smooth Ch1/Ch2 (Primary)
+  processed[0] =
+      map(rawSticks[0], currentModel.xMin, currentModel.xMax, 0, 255);
+  processed[1] =
+      map(rawSticks[1], currentModel.yMin, currentModel.yMax, 0, 255);
   smoothCh1 = (smoothCh1 * 0.8) + (processed[0] * 0.2);
   smoothCh2 = (smoothCh2 * 0.8) + (processed[1] * 0.2);
 
-  // 2. Process Ch3 & Ch4 (Aux Gimbal - standard mapping)
+  // Map Ch3/Ch4 (Aux)
   processed[2] = map(rawSticks[2], 0, 1023, 0, 255);
   processed[3] = map(rawSticks[3], 0, 1023, 0, 255);
 
-  // 3. Handle Mixer Logic
-  bool mixerOn = (digitalRead(MIXER_PIN) == LOW);
-  if (mixerOn) {
+  if (digitalRead(MIXER_PIN) == LOW) {
     int steering = (int)smoothCh1 - 127;
     int throttle = (int)smoothCh2 - 127;
-    payload.ch1 = (byte)smoothCh1; // Rudder still active
-    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255); // Left Motor
-    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255); // Right Motor
+    payload.ch1 = (byte)smoothCh1;
+    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255);
+    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255);
     payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
   } else {
     payload.ch1 = (byte)constrain(smoothCh1 + currentModel.trims[0], 0, 255);
@@ -216,20 +212,16 @@ void read_inputs() {
     payload.ch3 = (byte)constrain(processed[2] + currentModel.trims[2], 0, 255);
     payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
   }
-
-  // 4. Buttons
   payload.ch5 = !digitalRead(BUTTON_A_PIN);
   payload.ch6 = !digitalRead(BUTTON_B_PIN);
 
-  // 5. Update Link Quality (RSSI)
+  // Update Link Quality (RSSI) based on retransmits (getARC)
   if (radio.write(&payload, sizeof(Payload))) {
-    // getARC returns 0-15 (retransmits). 0 is perfect, 15 is poor.
-    linkQuality = map(radio.getARC(), 0, 15, 100, 0); 
-    if (radio.isAckPayloadAvailable()) {
+    linkQuality = map(radio.getARC(), 0, 15, 100, 0);
+    if (radio.isAckPayloadAvailable())
       radio.read(&telemetry, sizeof(telemetry));
-    }
   } else {
-    linkQuality = 0; // Failed to get an ACK
+    linkQuality = 0;
   }
 }
 
@@ -254,8 +246,6 @@ void handle_battery_alarm() {
 void updateDisplay() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
-
-  // Header
   u8g2.setCursor(0, 10);
   u8g2.print("MOD: ");
   u8g2.print(currentModel.name);
@@ -264,9 +254,7 @@ void updateDisplay() {
   u8g2.print("%");
   u8g2.drawLine(0, 13, 128, 13);
 
-  // Telemetry Row
   float txV = analogRead(TX_BATT_PIN) * (5.0 / 1024.0) * 2.0;
-  
   if (telemetry.signalOk && linkQuality > 0) {
     u8g2.setCursor(0, 30);
     u8g2.print("RX: ");
@@ -276,22 +264,19 @@ void updateDisplay() {
     u8g2.setCursor(0, 30);
     u8g2.print("--- NO LINK ---");
   }
-  
   u8g2.setCursor(85, 30);
   u8g2.print("TX:");
   u8g2.print(txV, 1);
   u8g2.print("V");
 
-  // Trim Menu
   u8g2.drawFrame(0, 40, 128, 24);
   u8g2.setCursor(5, 52);
-  u8g2.print("TRIM EDIT: CH");
+  u8g2.print("TRIM: CH");
   u8g2.print(selectedTrimChannel + 1);
   u8g2.setCursor(5, 62);
-  u8g2.print("VALUE: ");
+  u8g2.print("VAL: ");
   u8g2.print(currentModel.trims[selectedTrimChannel] > 0 ? "+" : "");
   u8g2.print(currentModel.trims[selectedTrimChannel]);
-
   u8g2.sendBuffer();
 }
 
@@ -312,7 +297,6 @@ void setup() {
     EEPROM.put(1000, activeIndex);
   }
 
-  // 1. MODEL SELECT (Hold B)
   if (digitalRead(BUTTON_B_PIN) == LOW && digitalRead(BUTTON_A_PIN) == HIGH) {
     unsigned long selectStart = millis();
     while (millis() - selectStart < 5000) {
@@ -337,11 +321,9 @@ void setup() {
 
   loadModel(activeIndex);
 
-  // 2. MODEL REPAIR / INIT (Default Unique ID)
   if (currentModel.name[0] < 32 || currentModel.name[0] > 126) {
     strcpy(currentModel.name, "NEW MODEL");
-    currentModel.boatAddress =
-        0xE8E8F0F0E1LL + activeIndex;  // Defaults to unique-per-slot
+    currentModel.boatAddress = 0xE8E8F0F0E1LL + activeIndex;
     currentModel.xMin = 0;
     currentModel.xMax = 1023;
     currentModel.yMin = 0;
@@ -350,15 +332,10 @@ void setup() {
     saveModel(activeIndex);
   }
 
-  // 3. BINDING (Hold A + B)
-  if (digitalRead(BUTTON_A_PIN) == LOW && digitalRead(BUTTON_B_PIN) == LOW) {
+  if (digitalRead(BUTTON_A_PIN) == LOW && digitalRead(BUTTON_B_PIN) == LOW)
     handle_binding();
-  }
-
-  // 4. CALIBRATION (Hold A)
-  if (digitalRead(BUTTON_A_PIN) == LOW && digitalRead(BUTTON_B_PIN) == HIGH) {
+  if (digitalRead(BUTTON_A_PIN) == LOW && digitalRead(BUTTON_B_PIN) == HIGH)
     calibrate();
-  }
 
   radio.begin();
   radio.setDataRate(RF24_250KBPS);
@@ -372,11 +349,7 @@ void loop() {
   handle_stealth_trims();
   if (now - prevMillis >= 20) {
     prevMillis = now;
-    read_inputs();
-    if (radio.write(&payload, sizeof(Payload)) &&
-        radio.isAckPayloadAvailable()) {
-      radio.read(&telemetry, sizeof(telemetry));
-    }
+    read_inputs();  // Radio write and telemetry read handled here
   }
   if (now - prevLcdMillis >= 200) {
     prevLcdMillis = now;
