@@ -38,8 +38,8 @@ struct __attribute__((packed)) ModelSettings {
 } currentModel;
 
 struct __attribute__((packed)) Payload {
-  byte ch1, ch2, ch3, ch4, ch5, ch6, ch7;
-} payload;
+  byte channels[7]; // Array is much safer for loops than named members
+};
 
 struct __attribute__((packed)) Telemetry {
   float voltage;
@@ -236,16 +236,22 @@ void read_inputs() {
   }
 
   // --- 3. FINAL OUTPUTS (Trims & Constrain) ---
-  // We apply trims and constraints to the "virtual" channels here
-  payload.ch1 = (byte)constrain(out[0] + currentModel.trims[0], 0, 255);
-  payload.ch2 = (byte)constrain(out[1] + currentModel.trims[1], 0, 255);
-  payload.ch3 = (byte)constrain(out[2] + currentModel.trims[2], 0, 255);
-  payload.ch4 = (byte)constrain(out[3] + currentModel.trims[3], 0, 255);
+  
+  // Apply safety lock
+  if (throttleLocked) {
+    out[1] = 127;
+    out[2] = 127;
+  }
 
-  // Digital/Auxiliary channels
-  payload.ch5 = !digitalRead(BUTTON_A_PIN);
-  payload.ch6 = !digitalRead(BUTTON_B_PIN);
-  payload.ch7 = mixerOn ? 255 : 0;  // Inform RX of Mixer state
+  // Map to the Payload Array and apply trims
+  for (int i = 0; i < 4; i++) {
+    payload.channels[i] = (byte)constrain(out[i] + currentModel.trims[i], 0, 255);
+  }
+
+  // Buttons and Status
+  payload.channels[4] = !digitalRead(BUTTON_A_PIN) ? 255 : 0;
+  payload.channels[5] = !digitalRead(BUTTON_B_PIN) ? 255 : 0;
+  payload.channels[6] = mixerOn ? 255 : 0;
 
   // --- 4. RADIO TRANSMISSION ---
   if (radio.write(&payload, sizeof(Payload))) {

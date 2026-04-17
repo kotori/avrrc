@@ -40,8 +40,8 @@ RF24 radio(9, 10);
 Servo servoOut[7];
 uint64_t masterAddress;  // The unique ID learned from TX
 
-struct __attribute__((packed)) Payload { 
-  byte ch1, ch2, ch3, ch4, ch5, ch6, ch7; 
+struct __attribute__((packed)) Payload {
+  byte channels[7]; // Array is much safer for loops than named members
 };
 
 struct __attribute__((packed)) Telemetry { 
