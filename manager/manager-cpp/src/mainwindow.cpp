@@ -85,3 +85,28 @@ void MainWindow::refreshListView() {
         ui->modelList->addItem(QString("[%1] %2").arg(i).arg(names[i]));
     }
 }
+
+void MainWindow::on_syncGetBtn_clicked() {
+    QString port = ui->portCombo->currentData().toString();
+    if (port.isEmpty()) return;
+
+    ui->statusbar->showMessage("Syncing from Transmitter...");
+    if (fleetManager.syncFromTX(port)) {
+        refreshListView();
+        ui->statusbar->showMessage("Sync Complete!");
+    } else {
+        ui->statusbar->showMessage("Sync Failed!");
+    }
+}
+
+void MainWindow::on_syncSetBtn_clicked() {
+    QString port = ui->portCombo->currentData().toString();
+    if (port.isEmpty()) return;
+
+    ui->statusbar->showMessage("Uploading to Transmitter...");
+    if (fleetManager.uploadToTX(port)) {
+        ui->statusbar->showMessage("Upload Successful!");
+    } else {
+        ui->statusbar->showMessage("Upload Failed!");
+    }
+}
