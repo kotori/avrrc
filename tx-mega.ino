@@ -31,20 +31,25 @@
 #include <nRF24L01.h>
 
 // --- STRUCTURES ---
-struct ModelSettings {
+struct __attribute__((packed)) ModelSettings {
   char name[12];
-  uint64_t boatAddress;  // Unique ID for binding this specific model
+  uint64_t boatAddress; 
   int xMin, xMax, yMin, yMax;
   int trims[4];
-} currentModel;
+};
 
-struct Payload {
-  byte ch1, ch2, ch3, ch4, ch5, ch6, ch7;
-} payload;
-struct Telemetry {
-  float voltage;
-  bool signalOk;
-} telemetry;
+struct __attribute__((packed)) Payload { 
+  byte ch1, ch2, ch3, ch4, ch5, ch6, ch7; 
+};
+
+struct __attribute__((packed)) Telemetry { 
+  float voltage; 
+  bool signalOk; 
+};
+
+ModelSettings currentModel; // Instance of the packed struct
+Payload payload;
+Telemetry telemetry;
 
 // --- PINS (Advanced Mega Config) ---
 const int BUTTON_A_PIN = 2;  // Calibration / Bind
