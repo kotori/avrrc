@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>MainWindow</class>
+  <widget class="QMainWindow" name="MainWindow">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>600</width>
+        <height>500</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>AVRRC Stealth Brick Manager</string>
+    </property>
+    <widget class="QWidget" name="centralwidget">
+      <layout class="QVBoxLayout" name="verticalLayout">
+        <!-- Top Row: Port Selection -->
+        <layout class="QHBoxLayout" name="portLayout">
+          <item>
+            <widget class="QLabel" name="label">
+              <string>Serial Port:</string>
+            </widget>
+          </item>
+          <item>
+            <widget class="QComboBox" name="portCombo"/>
+          </item>
+          <item>
+            <widget class="QPushButton" name="refreshBtn">
+              <string>Refresh</string>
+            </widget>
+          </item>
+        </layout>
+        <!-- Middle: Model List -->
+        <widget class="QListWidget" name="modelList"/>
+        <!-- Progress Bar -->
+        <widget class="QProgressBar" name="progressBar">
+          <property name="value">
+            <number>0</number>
+          </property>
+        </widget>
+        <!-- Bottom Row: Actions -->
+        <layout class="QHBoxLayout" name="actionLayout">
+          <item>
+            <widget class="QPushButton" name="renameBtn">
+              <property name="text">
+                <string>Rename Model</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="deleteBtn">
+              <property name="text">
+                <string>Delete Model</string>
+              </property>
+              <property name="styleSheet">
+                <string>color: #c62828;</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="syncGetBtn">
+              <property name="text">
+                <string>Sync from TX</string>
+              </property>
+              <property name="styleSheet">
+                <string>background-color: #2e7d32; color: white;</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="syncSetBtn">
+              <property name="text">
+                <string>Upload to TX</string>
+              </property>
+              <property name="styleSheet">
+                <string>background-color: #ef6c00; color: white;</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </layout>
+    </widget>
+    <widget class="QStatusBar" name="statusbar"/>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>
