@@ -30,12 +30,7 @@
 #include <nRF24L01.h>
 
 // --- PACKED STRUCTURES (Ensure bit-perfect sync with Linux/RX) ---
-struct __attribute__((packed)) ModelSettings {
-  char name[12];
-  uint64_t boatAddress;
-  int xMin, xMax, yMin, yMax;
-  int trims[4];
-} currentModel;
+#include "model_settings.h"
 
 struct __attribute__((packed)) Payload {
   byte channels[7]; // Array is much safer for loops than named members
