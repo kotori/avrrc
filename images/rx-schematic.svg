@@ -1,0 +1,17 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://w3.org">
+  <rect width="100%" height="100%" fill="white"/>
+  <!-- Arduino Nano -->
+  <rect x="300" y="200" width="160" height="250" fill="#E0E0E0" stroke="black" stroke-width="2"/>
+  <text x="310" y="230" font-family="Arial" font-size="16">Arduino Nano</text>
+  <!-- Servo Headers -->
+  <rect x="600" y="100" width="100" height="300" fill="#FFCC80" stroke="black"/>
+  <text x="610" y="130" font-family="Arial" font-size="14">Servos (D2-D8)</text>
+  <!-- Radio -->
+  <rect x="50" y="250" width="120" height="80" fill="#ADD8E6" stroke="black"/>
+  <text x="60" y="280" font-family="Arial" font-size="14">nRF24L01</text>
+  <line x1="170" y1="290" x2="300" y2="300" stroke="blue" stroke-width="2"/>
+  <text x="180" y="280" font-family="Arial" font-size="12" fill="blue">SPI: D11, D12, D13</text>
+  <!-- Voltage Tap -->
+  <path d="M 300 400 L 150 500" fill="none" stroke="orange" stroke-width="2"/>
+  <text x="100" y="520" font-family="Arial" font-size="12" fill="orange">A0: Voltage Sense</text>
+</svg>

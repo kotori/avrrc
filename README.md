@@ -247,7 +247,7 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
 ### 📐 Faceplate Template (SVG)
 
 <p align="center">
-  <img src="case-top.svg" width="400" alt="Faceplate Template">
+  <img src="images/case-top.svg" width="400" alt="Faceplate Template">
 </p>
 
 <details>
@@ -271,3 +271,78 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
   <circle cx="460" cy="400" r="15" fill="none" stroke="green" stroke-width="2"/>
 </svg>
 ```
+
+---
+
+## 🎮 Transmitter Schematic (Advanced TX)
+
+### 📐 Transmitter Schematic (SVG)
+
+<p align="center">
+  <img src="images/tx-mega-schematic.svg" width="400" alt="TX Mega Template">
+</p>
+
+<details>
+<summary>Click to view SVG Source Code</summary>
+
+```xml
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://w3.org">
+  <rect width="100%" height="100%" fill="white"/>
+  <!-- Arduino Mega Pro Mini -->
+  <rect x="300" y="200" width="200" height="300" fill="#E0E0E0" stroke="black" stroke-width="2"/>
+  <text x="310" y="230" font-family="Arial" font-size="16">Arduino Mega Pro Mini</text>
+  <!-- nRF24L01 -->
+  <rect x="50" y="100" width="120" height="80" fill="#ADD8E6" stroke="black"/>
+  <text x="60" y="130" font-family="Arial" font-size="14">nRF24L01</text>
+  <!-- OLED -->
+  <rect x="50" y="350" width="120" height="80" fill="#4A4A4A" stroke="black"/>
+  <text x="60" y="380" font-family="Arial" font-size="14" fill="white">OLED (I2C)</text>
+  <!-- Gimbals -->
+  <circle cx="650" cy="150" r="40" fill="none" stroke="red" stroke-width="2"/>
+  <text x="620" y="210" font-family="Arial" font-size="14">Gimbal 1 (A0/A1)</text>
+  <circle cx="650" cy="450" r="40" fill="none" stroke="red" stroke-width="2"/>
+  <text x="620" y="510" font-family="Arial" font-size="14">Gimbal 2 (A2/A3)</text>
+  <!-- Wiring: SPI -->
+  <line x1="170" y1="140" x2="300" y2="250" stroke="blue" stroke-width="2" stroke-dasharray="5,5"/>
+  <text x="180" y="200" font-family="Arial" font-size="12" fill="blue">SPI: D50, D51, D52</text>
+  <!-- Wiring: I2C -->
+  <line x1="170" y1="390" x2="300" y2="450" stroke="green" stroke-width="2"/>
+  <text x="180" y="430" font-family="Arial" font-size="12" fill="green">I2C: D20, D21</text>
+</svg>
+```
+
+---
+
+## 🎮 Receiver Schematic (Nano)
+
+This shows how the Arduino Nano distributes signals to your 7 Servo Channels.
+
+### 📐 Receiver Schematic (SVG)
+
+<p align="center">
+  <img src="images/rx-schematic.svg" width="400" alt="RX Template">
+</p>
+
+<details>
+<summary>Click to view SVG Source Code</summary>
+
+```xml
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://w3.org">
+  <rect width="100%" height="100%" fill="white"/>
+  <!-- Arduino Nano -->
+  <rect x="300" y="200" width="160" height="250" fill="#E0E0E0" stroke="black" stroke-width="2"/>
+  <text x="310" y="230" font-family="Arial" font-size="16">Arduino Nano</text>
+  <!-- Servo Headers -->
+  <rect x="600" y="100" width="100" height="300" fill="#FFCC80" stroke="black"/>
+  <text x="610" y="130" font-family="Arial" font-size="14">Servos (D2-D8)</text>
+  <!-- Radio -->
+  <rect x="50" y="250" width="120" height="80" fill="#ADD8E6" stroke="black"/>
+  <text x="60" y="280" font-family="Arial" font-size="14">nRF24L01</text>
+  <line x1="170" y1="290" x2="300" y2="300" stroke="blue" stroke-width="2"/>
+  <text x="180" y="280" font-family="Arial" font-size="12" fill="blue">SPI: D11, D12, D13</text>
+  <!-- Voltage Tap -->
+  <path d="M 300 400 L 150 500" fill="none" stroke="orange" stroke-width="2"/>
+  <text x="100" y="520" font-family="Arial" font-size="12" fill="orange">A0: Voltage Sense</text>
+</svg>
+```
+
