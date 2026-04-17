@@ -3,8 +3,7 @@
 
 #include <QObject>
 #include <QSerialPort>
-#include <QJsonArray>
-#include <QString>
+#include <QStringList>
 #include "model_settings.h"
 
 class FleetManager : public QObject {
@@ -12,18 +11,26 @@ class FleetManager : public QObject {
 public:
     explicit FleetManager(QObject *parent = nullptr);
 
-    // Core Functions
-    bool backupFleet(QString portName, QString fileName);
-    bool restoreFleet(QString portName, QString fileName);
+    // Hardware Actions
+    bool syncFromTX(QString portName);
+    bool uploadToTX(QString portName);
+
+    // Local Data Actions
+    void renameLocalModel(int slot, QString newName);
+    void deleteLocalModel(int slot);
+    QStringList getLocalModelNames();
+
+    // File Actions (JSON)
+    bool saveToFile(QString fileName);
+    bool loadFromFile(QString fileName);
 
 signals:
     void progressUpdated(int percent);
     void statusMessage(QString message);
-    void syncFinished(bool success);
 
 private:
     QSerialPort serial;
-    ModelSettings localFleet[20]; //local copy of 880-byte fleet.
+    ModelSettings localFleet[20]; // The actual data storage
 };
 
 #endif // FLEETMANAGER_H
