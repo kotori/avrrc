@@ -77,6 +77,7 @@ void handle_binding() {
 
       // Success: Solid LED for 3 seconds
       digitalWrite(STATUS_LED_PIN, HIGH);
+      radio.stopListening();
       delay(3000);
       break;
     }
@@ -132,6 +133,7 @@ void loop() {
   unsigned long now = millis();
 
   if (radio.available()) {
+ 
     radio.read(&payload, sizeof(Payload));
     lastRecvTime = now;
 
@@ -170,18 +172,28 @@ void loop() {
 
 void updateHardware() {
   for (int i = 0; i < 7; i++) {
-    byte val = *(((byte*)&payload) + i);
-    int pulse = map(val, 0, 255, 1000, 2000);
+    // 100% Type-Safe: No pointer math needed
+    int pulse = map(payload.channels[i], 0, 255, 1000, 2000);
     servoOut[i].writeMicroseconds(pulse);
   }
 }
 
 void resetPayload() {
-  payload.ch1 = payload.ch4 = payload.ch7 = NEUTRAL;
+  // Set everything to Neutral (127) first
+  for (int i = 0; i < 7; i++) {
+    payload.channels[i] = NEUTRAL;
+  }
+
+  // Check Failsafe Jumper (A1)
   bool fullStop = (digitalRead(BIND_FAILSAFE_PIN) == LOW);
-  payload.ch2 = fullStop ? 0 : NEUTRAL;
-  payload.ch3 = fullStop ? 0 : NEUTRAL;
-  payload.ch5 = 0;
-  payload.ch6 = 0;
-  payload.ch7 = 0;
+  
+  if (fullStop) {
+    payload.channels[1] = 0; // Throttle Left (Ch2) -> Stop
+    payload.channels[2] = 0; // Throttle Right (Ch3) -> Stop
+  }
+
+  // Digital Channels / Mixer Status defaults
+  payload.channels[4] = 0; // Ch5
+  payload.channels[5] = 0; // Ch6
+  payload.channels[6] = 0; // Ch7 (Mixer Off)
 }
