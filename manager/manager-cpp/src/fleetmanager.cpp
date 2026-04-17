@@ -37,10 +37,10 @@ QStringList FleetManager::getLocalModelNames() {
 
 void FleetManager::renameLocalModel(int slot, QString newName) {
     if (slot < 0 || slot >= 20) return;
-
-    memset(localFleet[slot].name, 0, 12);
+    memset(localFleet[slot].name, 0, 12); // Clears all 12 bytes
     QByteArray bytes = newName.toLatin1();
     memcpy(localFleet[slot].name, bytes.data(), qMin(bytes.length(), 11));
+    localFleet[slot].name[11] = '\0'; // Explicitly guarantee null termination
 }
 
 void FleetManager::deleteLocalModel(int slot) {
@@ -60,37 +60,42 @@ bool FleetManager::syncFromTX(QString portName) {
     serial.setBaudRate(QSerialPort::Baud9600);
     
     if (!serial.open(QIODevice::ReadWrite)) {
-        emit statusMessage("Error: Could not open " + portName);
+        emit statusMessage("Error: Could not open port " + portName);
         return false;
     }
 
-    // 1. Flush buffers and send the 'G'et command
+    // 1. Flush buffers and trigger the Mega
     serial.clear();
     serial.write("G");
     if (!serial.waitForBytesWritten(1000)) return false;
 
-    // 2. Receive 20 models sequentially
+    // 2. The "Total Read" Loop
     for (int i = 0; i < 20; ++i) {
-        char* buffer = reinterpret_cast<char*>(&localFleet[i]);
-        qint64 bytesToRead = sizeof(ModelSettings);
+        char* ptr = reinterpret_cast<char*>(&localFleet[i]);
+        qint64 bytesToRead = sizeof(ModelSettings); // 44 bytes
         qint64 totalRead = 0;
 
-        // Loop until the full 44-byte struct is captured for this slot
+        // Keep reading until this specific 44-byte struct is complete
         while (totalRead < bytesToRead) {
-            if (!serial.waitForReadyRead(3000)) { // 3-second timeout safety
-                emit statusMessage("Error: Sync timed out at model " + QString::number(i));
+            // Wait up to 3 seconds for data to arrive in the Linux buffer
+            if (!serial.waitForReadyRead(3000)) {
+                emit statusMessage("Sync Timeout at Model " + QString::number(i));
                 serial.close();
                 return false;
             }
-            qint64 chunk = serial.read(buffer + totalRead, bytesToRead - totalRead);
-            if (chunk < 0) { serial.close(); return false; }
+
+            // Read only what is missing for the current struct
+            qint64 chunk = serial.read(ptr + totalRead, bytesToRead - totalRead);
+            if (chunk <= 0) break; 
+            
             totalRead += chunk;
         }
+        
         emit progressUpdated(((i + 1) * 100) / 20);
     }
 
     serial.close();
-    saveToDb(); // Persistent SQL backup
+    saveToDb(); // Auto-archive to SQLite
     return true;
 }
 
