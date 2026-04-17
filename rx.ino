@@ -126,27 +126,41 @@ void updateTelemetry() {
 }
 
 void loop() {
+  unsigned long now = millis();
+
   if (radio.available()) {
     radio.read(&payload, sizeof(Payload));
-    lastRecvTime = millis();
+    lastRecvTime = now;
+
     digitalWrite(STATUS_LED_PIN, HIGH);
-    updateTelemetry();
-    updateHardware();
+    updateTelemetry(); 
+    updateHardware(); // Moves servos to new positions
   }
 
-  // Failsafe Logic: Active after 500ms
-  if (millis() - lastRecvTime > 500) {
+  // --- SIGNAL BLACKOUT MEMORY ---
+  // If we haven't heard anything in 500ms, trigger full failsafe
+  if (now - lastRecvTime > 500) {
     resetPayload();
     updateHardware();
-
-    // Telemetry reflects signal loss
+    
     telemetry.signalOk = false;
     radio.writeAckPayload(1, &telemetry, sizeof(telemetry));
 
-    if (millis() - lastBlinkTime > 200) {
+    // Slow blink for Failsafe
+    if (now - lastBlinkTime > 200) {
       ledState = !ledState;
       digitalWrite(STATUS_LED_PIN, ledState);
-      lastBlinkTime = millis();
+      lastBlinkTime = now;
+    }
+  } 
+  // If we miss a few packets (e.g. between 100ms and 500ms)
+  else if (now - lastRecvTime > 100) {
+    // HOLD last known good position (Don't call updateHardware or resetPayload)
+    // Rapid blink to show "Dirty Link"
+    if (now - lastBlinkTime > 50) {
+      ledState = !ledState;
+      digitalWrite(STATUS_LED_PIN, ledState);
+      lastBlinkTime = now;
     }
   }
 }
