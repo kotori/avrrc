@@ -286,7 +286,7 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
 <summary>Click to view SVG Source Code</summary>
 
 ```xml
-<svg width="1000" height="800" viewBox="0 0 1000 800" xmlns="http://w3.org" xmlns:xlink="http://w3.org">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="850" viewBox="0 0 1000 850">
   <rect width="100%" height="100%" fill="#ffffff"/>
   <rect x="350" y="200" width="300" height="450" rx="10" ry="10" fill="#e0e0e0" stroke="#000000" stroke-width="2"/>
   <text x="410" y="240" font-family="Arial" font-size="18" font-weight="bold">Mega 2560 Pro Mini</text>
@@ -327,7 +327,7 @@ This shows how the Arduino Nano distributes signals to your 7 Servo Channels.
 <summary>Click to view SVG Source Code</summary>
 
 ```xml
-<svg xmlns="http://w3.org" xmlns:xlink="http://w3.org" width="1000" height="800" viewBox="0 0 1000 800">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="850" viewBox="0 0 1000 850">
   <rect width="100%" height="100%" fill="#ffffff"/>
   
   <!-- ARDUINO NANO -->
