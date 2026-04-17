@@ -23,6 +23,7 @@ signals:
 
 private:
     QSerialPort serial;
+    ModelSettings localFleet[20]; //local copy of 880-byte fleet.
 };
 
 #endif // FLEETMANAGER_H
