@@ -66,6 +66,7 @@ int linkQuality = 0;
 unsigned long prevMillis = 0, prevLcdMillis = 0, lastTrimPress = 0;
 float smoothCh1 = 127.0, smoothCh2 = 127.0;  // Smoothing filters
 bool trimChanged = false;
+bool throttleLocked = true;  // Safety lock active at boot
 
 // --- HELPERS ---
 void loadModel(int idx) {
@@ -95,6 +96,17 @@ void handle_binding() {
     delay(250);
   }
   tone(BUZZER_PIN, 1500, 500);
+}
+
+// --- SAFETY HANDLING ---
+void handle_safety() {
+  if (throttleLocked) {
+    // A1 < 100 means the Left Y stick is pulled all the way down
+    if (analogRead(A1) < 100 && digitalRead(BUTTON_A_PIN) == LOW) {
+      throttleLocked = false;
+      tone(BUZZER_PIN, 2000, 200);  // Happy beep for "Armed"
+    }
+  }
 }
 
 // --- LINUX SYNC PROTOCOL ---
@@ -203,24 +215,24 @@ void read_inputs() {
   // --- 2. MIXER LOGIC (Virtual Mapping) ---
   bool mixerOn = (digitalRead(MIXER_PIN) == LOW);
 
-  // The entire Right Stick can be used for a camera gimbal (Pan on Ch3, Tilt on Ch4) when you aren't in Tank Mode.
+  // The entire Right Stick can be used for a camera gimbal (Pan on Ch3, Tilt on
+  // Ch4) when you aren't in Tank Mode.
   if (mixerOn) {
     // TANK MODE: Left Stick (A0/A1) drives both motors
-    int steering = (int)smoothCh1 - 127; // A0
-    int throttle = (int)smoothCh2 - 127; // A1
+    int steering = (int)smoothCh1 - 127;  // A0
+    int throttle = (int)smoothCh2 - 127;  // A1
     if (abs(steering) < 5) steering = 0;
 
     out[0] = (int)smoothCh1;             // Ch1: Physical Rudder
     out[1] = 127 + throttle + steering;  // Ch2: Left Motor ESC
     out[2] = 127 + throttle - steering;  // Ch3: Right Motor ESC
     out[3] = processed[3];               // Ch4: Aux (Right Stick Y)
-  } 
-  else {
+  } else {
     // STANDARD MODE: Left Stick (A1) is Throttle, Right Stick (A2) is Aux
-    out[0] = (int)smoothCh1;             // Ch1: Physical Rudder (Left Stick X)
-    out[1] = (int)smoothCh2;             // Ch2: Main Throttle (Left Stick Y)
-    out[2] = processed[2];               // Ch3: Aux 1 (Right Stick X)
-    out[3] = processed[3];               // Ch4: Aux 2 (Right Stick Y)
+    out[0] = (int)smoothCh1;  // Ch1: Physical Rudder (Left Stick X)
+    out[1] = (int)smoothCh2;  // Ch2: Main Throttle (Left Stick Y)
+    out[2] = processed[2];    // Ch3: Aux 1 (Right Stick X)
+    out[3] = processed[3];    // Ch4: Aux 2 (Right Stick Y)
   }
 
   // --- 3. FINAL OUTPUTS (Trims & Constrain) ---
@@ -268,7 +280,7 @@ void updateDisplay() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
 
-  // Header with Model Name and Link %
+  // Header: Model Name & Link Quality
   u8g2.setCursor(0, 10);
   u8g2.print("MOD: ");
   u8g2.print(currentModel.name);
@@ -277,23 +289,30 @@ void updateDisplay() {
   u8g2.print("%");
   u8g2.drawLine(0, 13, 128, 13);
 
-  // Telemetry
-  float txV = analogRead(TX_BATT_PIN) * (5.0 / 1024.0) * 2.0;
-  if (telemetry.signalOk && linkQuality > 0) {
-    u8g2.setCursor(0, 30);
-    u8g2.print("RX: ");
-    u8g2.print(telemetry.voltage, 1);
-    u8g2.print("V");
+  // Center Row: Telemetry or Safety Warning
+  if (throttleLocked) {
+    u8g2.setCursor(30, 32);
+    u8g2.print("! THROTTLE LOCKED !");
   } else {
-    u8g2.setCursor(0, 30);
-    u8g2.print("--- NO LINK ---");
+    // Show RX Voltage
+    if (telemetry.signalOk && linkQuality > 0) {
+      u8g2.setCursor(0, 32);
+      u8g2.print("RX: ");
+      u8g2.print(telemetry.voltage, 1);
+      u8g2.print("V");
+    } else {
+      u8g2.setCursor(0, 32);
+      u8g2.print("--- NO LINK ---");
+    }
+    // Show TX Voltage
+    float txV = analogRead(TX_BATT_PIN) * (5.0 / 1024.0) * 2.0;
+    u8g2.setCursor(85, 32);
+    u8g2.print("TX:");
+    u8g2.print(txV, 1);
+    u8g2.print("V");
   }
-  u8g2.setCursor(85, 30);
-  u8g2.print("TX:");
-  u8g2.print(txV, 1);
-  u8g2.print("V");
 
-  // Trim Editor Frame
+  // Footer: Trim Menu
   u8g2.drawFrame(0, 40, 128, 24);
   u8g2.setCursor(5, 52);
   u8g2.print("TRIM EDIT: CH");
@@ -372,17 +391,19 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
-  handle_stealth_trims();
+
+  handle_safety();         // 1. Check for unlock handshake.
+  handle_stealth_trims();  // 2. Non-blocking menu.
 
   if (now - prevMillis >= 20) {
     prevMillis = now;
-    read_inputs();  // Radio write and telemetry read handled here
+    read_inputs();  // 3. Process sticks and radio (locked/live)
   }
 
   if (now - prevLcdMillis >= 200) {
     prevLcdMillis = now;
-    handle_pc_sync();
-    handle_battery_alarm();
-    updateDisplay();
+    handle_pc_sync();        // 4. Check for linux companion commands.
+    handle_battery_alarm();  // 5. Flash/Beep if RX voltage is LOW
+    updateDisplay();         // 6. Draw the dashboard
   }
 }
