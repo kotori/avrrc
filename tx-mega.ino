@@ -185,30 +185,52 @@ void handle_stealth_trims() {
 }
 
 void read_inputs() {
-  int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2),
-                      analogRead(A3)};
+  int rawSticks[4] = {analogRead(A0), analogRead(A1), analogRead(A2), analogRead(A3)};
   int processed[4];
-  for (int i = 0; i < 4; i++) {
-    int mi = (i == 0) ? currentModel.xMin : (i == 1) ? currentModel.yMin : 0;
-    int ma = (i == 0) ? currentModel.xMax : (i == 1) ? currentModel.yMax : 1023;
-    processed[i] = map(rawSticks[i], mi, ma, 0, 255);
-    processed[i] = constrain(processed[i] + currentModel.trims[i], 0, 255);
-  }
-  if (digitalRead(MIXER_PIN) == LOW) {
-    int steering = processed[0] - 127;
-    int throttle = processed[1] - 127;
-    payload.ch1 = (byte)processed[0];
-    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255);
-    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255);
-    payload.ch4 = (byte)processed[3];
+
+  // 1. Process and Smooth Ch1 & Ch2 (Primary Gimbal)
+  // mi/ma uses your calibration variables for precision
+  processed[0] = map(rawSticks[0], currentModel.xMin, currentModel.xMax, 0, 255);
+  processed[1] = map(rawSticks[1], currentModel.yMin, currentModel.yMax, 0, 255);
+  
+  // Exponential Moving Average smoothing (Alpha = 0.2)
+  smoothCh1 = (smoothCh1 * 0.8) + (processed[0] * 0.2);
+  smoothCh2 = (smoothCh2 * 0.8) + (processed[1] * 0.2);
+
+  // 2. Process Ch3 & Ch4 (Aux Gimbal - standard mapping)
+  processed[2] = map(rawSticks[2], 0, 1023, 0, 255);
+  processed[3] = map(rawSticks[3], 0, 1023, 0, 255);
+
+  // 3. Handle Mixer Logic
+  bool mixerOn = (digitalRead(MIXER_PIN) == LOW);
+  if (mixerOn) {
+    int steering = (int)smoothCh1 - 127;
+    int throttle = (int)smoothCh2 - 127;
+    payload.ch1 = (byte)smoothCh1; // Rudder still active
+    payload.ch2 = (byte)constrain(127 + throttle + steering, 0, 255); // Left Motor
+    payload.ch3 = (byte)constrain(127 + throttle - steering, 0, 255); // Right Motor
+    payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
   } else {
-    payload.ch1 = (byte)processed[0];
-    payload.ch2 = (byte)processed[1];
-    payload.ch3 = (byte)processed[2];
-    payload.ch4 = (byte)processed[3];
+    payload.ch1 = (byte)constrain(smoothCh1 + currentModel.trims[0], 0, 255);
+    payload.ch2 = (byte)constrain(smoothCh2 + currentModel.trims[1], 0, 255);
+    payload.ch3 = (byte)constrain(processed[2] + currentModel.trims[2], 0, 255);
+    payload.ch4 = (byte)constrain(processed[3] + currentModel.trims[3], 0, 255);
   }
+
+  // 4. Buttons
   payload.ch5 = !digitalRead(BUTTON_A_PIN);
   payload.ch6 = !digitalRead(BUTTON_B_PIN);
+
+  // 5. Update Link Quality (RSSI)
+  if (radio.write(&payload, sizeof(Payload))) {
+    // getARC returns 0-15 (retransmits). 0 is perfect, 15 is poor.
+    linkQuality = map(radio.getARC(), 0, 15, 100, 0); 
+    if (radio.isAckPayloadAvailable()) {
+      radio.read(&telemetry, sizeof(telemetry));
+    }
+  } else {
+    linkQuality = 0; // Failed to get an ACK
+  }
 }
 
 void handle_battery_alarm() {
