@@ -250,27 +250,6 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
   <img src="images/case-top.svg" width="400" alt="Faceplate Template">
 </p>
 
-<details>
-<summary>Click to view SVG Source Code</summary>
-
-```xml
-<svg width="800" height="700" viewBox="0 0 800 700" xmlns="http://w3.org">
-  <!-- Stealth Perimeter -->
-  <path d="M 150,50 L 650,50 L 750,150 L 750,550 L 650,650 L 150,650 L 50,550 L 50,150 Z" fill="none" stroke="black" stroke-width="3"/>
-  <!-- Gimbals -->
-  <circle cx="210" cy="480" r="85" fill="none" stroke="red" stroke-width="2"/>
-  <circle cx="590" cy="480" r="85" fill="none" stroke="red" stroke-width="2"/>
-  <!-- OLED -->
-  <rect x="330" y="100" width="140" height="90" fill="none" stroke="blue" stroke-width="2"/>
-  <!-- Trims -->
-  <circle cx="330" cy="220" r="15" fill="none" stroke="purple" stroke-width="2"/>
-  <circle cx="400" cy="220" r="15" fill="none" stroke="purple" stroke-width="2"/>
-  <circle cx="470" cy="220" r="15" fill="none" stroke="purple" stroke-width="2"/>
-  <!-- Functions -->
-  <circle cx="340" cy="400" r="15" fill="none" stroke="green" stroke-width="2"/>
-  <circle cx="460" cy="400" r="15" fill="none" stroke="green" stroke-width="2"/>
-</svg>
-```
 
 ## 🎮 Transmitter Schematic (Advanced TX)
 
@@ -280,34 +259,6 @@ Custom 10-layer plywood enclosure designed for nautical ergonomics and industria
   <img src="images/tx-mega-schematic.svg" width="400" alt="TX Mega Template">
 </p>
 
-<details>
-<summary>Click to view SVG Source Code</summary>
-
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="850" viewBox="0 0 1000 850">
-  <rect width="100%" height="100%" fill="#ffffff"/>
-  <rect x="350" y="200" width="300" height="450" rx="10" ry="10" fill="#e0e0e0" stroke="#000000" stroke-width="2"/>
-  <text x="410" y="240" font-family="Arial" font-size="18" font-weight="bold">Mega 2560 Pro Mini</text>
-  <rect x="50" y="50" width="160" height="100" rx="5" ry="5" fill="#add8e6" stroke="#000000"/>
-  <text x="65" y="80" font-family="Arial" font-size="14" font-weight="bold">nRF24L01+</text>
-  <path d="M 210 100 L 350 250" fill="none" stroke="#0000ff" stroke-width="2" stroke-dasharray="4"/>
-  <text x="220" y="150" font-family="Arial" font-size="12" fill="#0000ff">SPI: 50, 51, 52, 9, 10</text>
-  <circle cx="150" cy="350" r="60" fill="#ffe0e0" stroke="#000000"/><text x="100" y="430" font-family="Arial" font-size="12">Left Gimbal (A0/A1)</text>
-  <circle cx="850" cy="350" r="60" fill="#ffe0e0" stroke="#000000"/><text x="800" y="430" font-family="Arial" font-size="12">Right Gimbal (A2/A3)</text>
-  <rect x="425" y="50" width="150" height="80" rx="5" ry="5" fill="#4a4a4a" stroke="#000000"/><text x="445" y="80" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff">OLED (I2C)</text>
-  <path d="M 500 130 L 500 200" fill="none" stroke="#008000" stroke-width="2"/>
-  <g fill="#90ee90" stroke="#000000">
-    <circle cx="100" cy="550" r="20"/><text x="130" y="555" font-family="Arial" font-size="12">Trim Select (D8)</text>
-    <circle cx="100" cy="600" r="20"/><text x="130" y="605" font-family="Arial" font-size="12">Trim + (D6)</text>
-    <circle cx="100" cy="650" r="20"/><text x="130" y="655" font-family="Arial" font-size="12">Trim - (D7)</text>
-    <circle cx="900" cy="550" r="20"/><text x="780" y="555" font-family="Arial" font-size="12">Button A (D2)</text>
-    <circle cx="900" cy="600" r="20"/><text x="780" y="605" font-family="Arial" font-size="12">Button B (D3)</text>
-    <rect x="880" y="630" width="40" height="40"/><text x="770" y="655" font-family="Arial" font-size="12">Mixer Sw (D4)</text>
-    <circle cx="500" cy="730" r="20"/><text x="460" y="770" font-family="Arial" font-size="12">Buzzer (D5)</text>
-  </g>
-  <rect x="750" y="50" width="120" height="60" fill="#fffacd" stroke="#000000"/><text x="760" y="85" font-family="Arial" font-size="12">10k/10k Tap (A15)</text>
-</svg>
-```
 
 ## 🎮 Receiver Schematic (Nano)
 
@@ -318,63 +269,4 @@ This shows how the Arduino Nano distributes signals to your 7 Servo Channels.
 <p align="center">
   <img src="images/rx-schematic.svg" width="400" alt="RX Template">
 </p>
-
-<details>
-<summary>Click to view SVG Source Code</summary>
-
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="850" viewBox="0 0 1000 850">
-  <rect width="100%" height="100%" fill="#ffffff"/>
-  
-  <!-- ARDUINO NANO -->
-  <rect x="350" y="250" width="200" height="400" rx="10" fill="#e0e0e0" stroke="#333" stroke-width="3"/>
-  <text x="400" y="290" font-family="Arial" font-size="20" font-weight="bold">Arduino Nano</text>
-  
-  <!-- NRF24L01+ MODULE -->
-  <rect x="50" y="100" width="180" height="120" rx="5" fill="#add8e6" stroke="#005b96" stroke-width="2"/>
-  <text x="70" y="135" font-family="Arial" font-size="16" font-weight="bold">nRF24L01+</text>
-  <circle cx="210" cy="120" r="10" fill="#ff4444"/> <!-- Antenna Port -->
-  <text x="65" y="180" font-family="Arial" font-size="12">SPI: 11, 12, 13</text>
-  <text x="65" y="200" font-family="Arial" font-size="12">CE: 9 | CSN: 10</text>
-  
-  <!-- DECOUPLING CAPACITOR -->
-  <rect x="240" y="140" width="30" height="40" fill="#888" stroke="#333"/>
-  <text x="230" y="130" font-family="Arial" font-size="10">10uF-100uF</text>
-  
-  <!-- SERVO / ESC RAIL (7 CHANNELS) -->
-  <rect x="700" y="100" width="250" height="550" rx="5" fill="#ffe0b2" stroke="#e65100" stroke-width="2"/>
-  <text x="740" y="135" font-family="Arial" font-size="18" font-weight="bold">Servo/ESC Rail</text>
-  <g font-family="Arial" font-size="12" fill="#333">
-    <text x="720" y="180">D2: CH1 (Rudder)</text>
-    <text x="720" y="230">D3: CH2 (Throttle/L)</text>
-    <text x="720" y="280">D4: CH3 (Aux/R Motor)</text>
-    <text x="720" y="330">D5: CH4 (Yaw/Pan)</text>
-    <text x="720" y="380">D6: CH5 (Tilt)</text>
-    <text x="720" y="430">D7: CH6 (Digital A)</text>
-    <text x="720" y="480">D8: CH7 (Mixer Status)</text>
-  </g>
-
-  <!-- SENSORS & STATUS -->
-  <g stroke="#333" stroke-width="2">
-    <!-- LED -->
-    <circle cx="150" cy="400" r="15" fill="#ff4444"/>
-    <text x="110" y="440" font-family="Arial" font-size="12">Status LED (A2)</text>
-    
-    <!-- BIND JUMPER -->
-    <rect x="130" y="500" width="40" height="30" fill="#90ee90"/>
-    <text x="90" y="550" font-family="Arial" font-size="12">Bind Jumper (A1)</text>
-    
-    <!-- VOLTAGE DIVIDER -->
-    <rect x="110" y="620" width="100" height="60" fill="#fffacd"/>
-    <text x="115" y="640" font-family="Arial" font-size="11">R1: 10k | R2: 4.7k</text>
-    <text x="120" y="660" font-family="Arial" font-size="12" font-weight="bold">Volt Tap (A0)</text>
-  </g>
-
-  <!-- WIRING BUS LINES -->
-  <path d="M 230 160 L 350 350" fill="none" stroke="#005b96" stroke-width="2" stroke-dasharray="5,3"/> <!-- Radio Bus -->
-  <path d="M 700 350 L 550 450" fill="none" stroke="#e65100" stroke-width="2"/> <!-- Servo Bus -->
-  <path d="M 210 650 L 350 600" fill="none" stroke="#fbc02d" stroke-width="2"/> <!-- Voltage line -->
-
-</svg>
-```
 
