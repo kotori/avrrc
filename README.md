@@ -109,6 +109,33 @@ The receiver manages the 2.4GHz link, monitors the main battery, and drives up t
 
 ---
 
+## ⚓ Standardized Channel Map (Mode 2)
+
+To ensure consistent operation, AVRRC follows the industry-standard **Mode 2** gimbal layout. This ensures that movement logic remains on the Left Stick while the Right Stick is reserved for secondary controls.
+
+### 🕹️ Transmitter Input Layout
+*   **Left Stick (X-Axis):** Yaw (Rudder / Steering)
+*   **Left Stick (Y-Axis):** Throttle (Forward/Reverse)
+*   **Right Stick (X-Axis):** Auxiliary 1 (Pan / Camera / Accessories)
+*   **Right Stick (Y-Axis):** Auxiliary 2 (Tilt / Lights / Crane)
+
+### 🔌 Receiver Output Mapping
+
+| Channel | Standard Mode (Mixer OFF) | Tank Mode (Mixer ON) |
+| :--- | :--- | :--- |
+| **CH1** | Rudder Servo | Rudder Servo (Inactive) |
+| **CH2** | Main Motor ESC | **Left Motor ESC** |
+| **CH3** | Auxiliary Servo 1 | **Right Motor ESC** |
+| **CH4** | Auxiliary Servo 2 | Auxiliary Servo 2 |
+| **CH5** | Button A (Digital) | Button A (Digital) |
+| **CH6** | Button B (Digital) | Button B (Digital) |
+| **CH7** | Mixer OFF (0) | Mixer ON (255) |
+
+> [!TIP]
+> **Tank Mode Logic:** When the Mixer Switch (D4) is grounded, the Left Stick's Throttle and Steering are combined to drive CH2 and CH3. This allows you to drive a dual-motor boat entirely with your left thumb.
+
+---
+
 ## 🚀 Operational Guide
 
 ### ⚖️ Auto-Calibration
