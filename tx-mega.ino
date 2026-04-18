@@ -264,15 +264,18 @@ void read_inputs() {
 void handle_battery_alarm() {
   static unsigned long lastAlarm = 0;
   static bool flash = false;
-  if (telemetry.voltage > 1.0 && telemetry.voltage < 6.6) {
+
+  // 6.6V is a safe 'Limp Home' threshold for a 2S LiPo/Li-ion
+  if (rxBatteryVoltage > 1.0 && rxBatteryVoltage < 6.6) {
     if (millis() - lastAlarm > 1000) {
       lastAlarm = millis();
       flash = !flash;
       if (flash) {
         tone(BUZZER_PIN, 500, 200);
-        u8g2.setContrast(0);
-      } else
+        u8g2.setContrast(0);  // Flash the screen
+      } else {
         u8g2.setContrast(255);
+      }
     }
   } else {
     u8g2.setContrast(255);
