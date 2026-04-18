@@ -34,12 +34,13 @@
 
 struct __attribute__((packed)) Payload {
   byte channels[7]; // Array is much safer for loops than named members
-};
+}payload;
 
 struct __attribute__((packed)) Telemetry {
-  float voltage;
+  int rawVoltage;
   bool signalOk;
 } telemetry;
+
 
 // --- PINS (Advanced Mega Config) ---
 const int BUTTON_A_PIN = 2;
@@ -62,6 +63,7 @@ unsigned long prevMillis = 0, prevLcdMillis = 0, lastTrimPress = 0;
 float smoothCh1 = 127.0, smoothCh2 = 127.0;  // Smoothing filters
 bool trimChanged = false;
 bool throttleLocked = true;  // Safety lock active at boot
+float rxBatteryVoltage = 0;
 
 // --- HELPERS ---
 void loadModel(int idx) {
@@ -277,6 +279,15 @@ void handle_battery_alarm() {
   }
 }
 
+void handle_telemetry() {
+  // If we have a good signal, parse the telemetry.
+  //  For now, just rx battery voltage.
+  if (telemetry.signalOk) {
+    // 3.127 is your calculated 10k/4.7k divider ratio
+    rxBatteryVoltage = telemetry.rawVoltage * (5.0 / 1024.0) * 3.127;
+  }
+}
+
 void updateDisplay() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
@@ -299,7 +310,7 @@ void updateDisplay() {
     if (telemetry.signalOk && linkQuality > 0) {
       u8g2.setCursor(0, 32);
       u8g2.print("RX: ");
-      u8g2.print(telemetry.voltage, 1);
+      u8g2.print(rxBatteryVoltage, 1);
       u8g2.print("V");
     } else {
       u8g2.setCursor(0, 32);
@@ -342,6 +353,8 @@ void setup() {
     activeIndex = 0;
     EEPROM.put(1000, activeIndex);
   }
+
+  rxBatteryVoltage = 0;
 
   if (digitalRead(BUTTON_B_PIN) == LOW && digitalRead(BUTTON_A_PIN) == HIGH) {
     unsigned long selectStart = millis();
@@ -399,6 +412,7 @@ void loop() {
   if (now - prevMillis >= 20) {
     prevMillis = now;
     read_inputs();  // 3. Process sticks and radio (locked/live)
+    handle_telemetry();
   }
 
   if (now - prevLcdMillis >= 200) {

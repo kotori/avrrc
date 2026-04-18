@@ -45,7 +45,7 @@ struct __attribute__((packed)) Payload {
 };
 
 struct __attribute__((packed)) Telemetry { 
-  float voltage; 
+  int rawVoltage; 
   bool signalOk; 
 };
 
@@ -107,7 +107,7 @@ void setup() {
   radio.enableAckPayload();
   radio.openReadingPipe(1, masterAddress);
 
-  telemetry.voltage = 0.0;
+  telemetry.rawVoltage = 0.0;
   telemetry.signalOk = true;
   radio.writeAckPayload(1, &telemetry, sizeof(telemetry));
 
@@ -122,8 +122,8 @@ void setup() {
 }
 
 void updateTelemetry() {
-  int raw = analogRead(VOLTAGE_PIN);
-  telemetry.voltage = raw * (5.0 / 1024.0) * 3.127;
+  // Just send the raw 10-bit ADC value.
+  telemetry.rawVoltage = analogRead(VOLTAGE_PIN);
   telemetry.signalOk = (millis() - lastRecvTime < 500);
 
   radio.writeAckPayload(1, &telemetry, sizeof(telemetry));
