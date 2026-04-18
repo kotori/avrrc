@@ -338,7 +338,9 @@ void updateDisplay() {
 }
 
 void setup() {
+  // Init the serial interface.
   Serial.begin(9600);
+  // Init the graphics interface.
   u8g2.begin();
 
   // 1. Hardware Pin Config
@@ -357,18 +359,18 @@ void setup() {
     EEPROM.put(1000, activeIndex);
   }
 
+  // Ensure our voltage is sane before we display it.
   rxBatteryVoltage = 0;
 
   // 3. MODEL SELECTION MENU (Hold Button B at boot)
   if (digitalRead(BUTTON_B_PIN) == LOW && digitalRead(BUTTON_A_PIN) == HIGH) {
     unsigned long selectStart = millis();
-
     while (millis() - selectStart < 5000) {
       if (digitalRead(BUTTON_B_PIN) == LOW) {
         activeIndex = (activeIndex + 1) % 20;
         loadModel(activeIndex);
 
-        // --- INITIALIZE EMPTY SLOTS AS 'DEFAULT' ---
+        // --- INITIALIZE EMPTY/CORRUPT SLOTS AS 'Default' ---
         if (currentModel.name[0] < 32 || currentModel.name[0] > 126) {
           strcpy(currentModel.name, "Default");
           currentModel.boatAddress = 0xE8E8F0F0E1LL + activeIndex;
@@ -376,9 +378,7 @@ void setup() {
           currentModel.xMax = 1023;
           currentModel.yMin = 0;
           currentModel.yMax = 1023;
-
           for (int i = 0; i < 4; i++) currentModel.trims[i] = 0;
-
           saveModel(activeIndex);
         }
 
@@ -394,16 +394,16 @@ void setup() {
 
         tone(BUZZER_PIN, 1000, 50);
         delay(350);
-        selectStart = millis();  // Reset timer on button press
+        selectStart = millis();  // Reset 5s timer
       }
-    }  // end while (millis() - selectStart < 5000)
+    }
     EEPROM.put(1000, activeIndex);
   }
 
-  // 4. Load the Final Model Choice
+  // 4. Load the Final Model Selection
   loadModel(activeIndex);
 
-  // --- FINAL FALLBACK: Initialize Slot if unformatted ---
+  // --- FINAL FALLBACK: Ensure the current slot is not corrupted ---
   if (currentModel.name[0] < 32 || currentModel.name[0] > 126) {
     strcpy(currentModel.name, "Default");
     currentModel.boatAddress = 0xE8E8F0F0E1LL + activeIndex;
@@ -428,7 +428,7 @@ void setup() {
   radio.openWritingPipe(currentModel.boatAddress);
   radio.stopListening();
 
-  tone(BUZZER_PIN, 1500, 100);  // Startup chirp
+  tone(BUZZER_PIN, 1500, 100);  // System Ready Chirp
 }
 
 void loop() {
