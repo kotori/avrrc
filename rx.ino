@@ -41,12 +41,12 @@ Servo servoOut[7];
 uint64_t masterAddress;  // The unique ID learned from TX
 
 struct __attribute__((packed)) Payload {
-  byte channels[7]; // Array is much safer for loops than named members
+  byte channels[7];  // Array is much safer for loops than named members
 };
 
-struct __attribute__((packed)) Telemetry { 
-  int rawVoltage; 
-  bool signalOk; 
+struct __attribute__((packed)) Telemetry {
+  int rawVoltage;
+  bool signalOk;
 };
 
 Payload payload;
@@ -133,13 +133,12 @@ void loop() {
   unsigned long now = millis();
 
   if (radio.available()) {
- 
     radio.read(&payload, sizeof(Payload));
     lastRecvTime = now;
 
     digitalWrite(STATUS_LED_PIN, HIGH);
-    updateTelemetry(); 
-    updateHardware(); // Moves servos to new positions
+    updateTelemetry();
+    updateHardware();  // Moves servos to new positions
   }
 
   // --- SIGNAL BLACKOUT MEMORY ---
@@ -147,7 +146,7 @@ void loop() {
   if (now - lastRecvTime > 500) {
     resetPayload();
     updateHardware();
-    
+
     telemetry.signalOk = false;
     radio.writeAckPayload(1, &telemetry, sizeof(telemetry));
 
@@ -157,7 +156,7 @@ void loop() {
       digitalWrite(STATUS_LED_PIN, ledState);
       lastBlinkTime = now;
     }
-  } 
+  }
   // If we miss a few packets (e.g. between 100ms and 500ms)
   else if (now - lastRecvTime > 100) {
     // HOLD last known good position (Don't call updateHardware or resetPayload)
@@ -186,14 +185,14 @@ void resetPayload() {
 
   // Check Failsafe Jumper (A1)
   bool fullStop = (digitalRead(BIND_FAILSAFE_PIN) == LOW);
-  
+
   if (fullStop) {
-    payload.channels[1] = 0; // Throttle Left (Ch2) -> Stop
-    payload.channels[2] = 0; // Throttle Right (Ch3) -> Stop
+    payload.channels[1] = 0;  // Throttle Left (Ch2) -> Stop
+    payload.channels[2] = 0;  // Throttle Right (Ch3) -> Stop
   }
 
   // Digital Channels / Mixer Status defaults
-  payload.channels[4] = 0; // Ch5
-  payload.channels[5] = 0; // Ch6
-  payload.channels[6] = 0; // Ch7 (Mixer Off)
+  payload.channels[4] = 0;  // Ch5
+  payload.channels[5] = 0;  // Ch6
+  payload.channels[6] = 0;  // Ch7 (Mixer Off)
 }
