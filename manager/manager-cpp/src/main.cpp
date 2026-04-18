@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     // 2. Set Application Metadata (Useful for Linux Desktop integration)
     app.setApplicationName("AVRRC Manager");
     app.setOrganizationName("Kotori");
-    app.setApplicationVersion("1.0.0");
+    app.setApplicationVersion(APP_VERSION);
 
     // 3. Optional: Global Dark Mode styling for a "Stealth" look
     // This makes the app look consistent across different Debian Desktop Environments
