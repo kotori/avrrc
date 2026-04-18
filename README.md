@@ -5,6 +5,44 @@ AVRRC is a custom-engineered 2.4GHz radio system built for the Arduino ecosystem
 
 ---
 
+## 🚀 Quick Start (v1.0 Stealth Brick)
+
+Follow these steps to get your "Stealth Brick" system from the bench to the water.
+
+### 1. Firmware Deployment
+* **Transmitter:** Flash `tx-mega.ino` to your Arduino Mega 2560 Pro Mini.
+* **Receiver:** Flash `rx.ino` to your Arduino Nano.
+* **Bind:** Hold **Button A + B** on the TX while powering on the RX with the **A1 Jumper** connected to GND.
+
+### 2. Build the Desktop Manager (Debian/Linux)
+Ensure you have the Qt6 development headers installed:
+```bash
+sudo apt install qt6-base-dev qt6-serialport-dev qt6-sql-dev cmake build-essential
+cd manager/manager-cpp
+mkdir build && cd build
+cmake ..
+make
+./AVRRC_Manager
+```
+
+Connect via USB and click Sync from TX to pull your 20 model slots into the local SQLite library.
+
+### 3. Operation & Safety Handshake
+he system boots in LOCKED mode for safety. You cannot spin the motors until you "Arm" the transmitter:
+
+1. Power on the Transmitter and Boat.
+2. Pull the Left Stick (Throttle) all the way DOWN.
+3. Press Button A.
+4. The buzzer will beep, and the OLED will switch from ! LOCKED ! to the live dashboard. You are now live.
+
+#### ⚓ Core Controls
+
+ * Stick Left (A1/A0): Throttle & Steering (Tank/Mixer mode available via D4 switch).
+ * Stick Right (A3/A2): Auxiliary Channels (Gimbals, Cranes, etc.).
+ * Trims: Use the Side Buttons (D6, D7, D8) to nudge digital trims in real-time. Settings auto-save to EEPROM after 5 seconds of inactivity.
+
+---
+
 ## 🎮 Transmitter (TX) Configurations
 
 ### Option A: Standard TX (Arduino Nano)
