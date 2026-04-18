@@ -43,6 +43,52 @@ he system boots in LOCKED mode for safety. You cannot spin the motors until you 
 
 ---
 
+## 📊 Feature Comparison
+
+The AVR-RC project offers two distinct transmitter tiers. While both use the same NRF24L01 radio protocol, they are designed for different use cases and hardware constraints.
+
+| Feature | Simple TX (Nano/Uno) | TX-Mega (Mega 2560 Pro) |
+| :--- | :--- | :--- |
+| **Primary Goal** | Minimalist, single-model control. | Fleet management & advanced telemetry. |
+| **Model Memory** | **None.** One active ID in EEPROM. | **Multiple.** Stores up to 10+ models. |
+| **Calibration** | Global (applies to all receivers). | Per-Model (stored in `ModelSettings`). |
+| **Binding** | One ID controls any paired model. | Unique ID per model slot. |
+| **Display** | Serial Monitor (Debug Only). | High-Res OLED/LCD (U8g2). |
+| **Mixing** | Hardcoded Hardware Switch (D4). | Menu-selectable Software Mixers. |
+| **Trims** | Manual/Universal. | Digital & Saved per Model. |
+
+---
+
+## 🛠️ Binding Behavior Differences
+
+### Simple TX (The "Master Key" Approach)
+The Simple TX generates one unique **Master ID**. 
+*   **Multiple Model Support:** You can bind 10 different receivers to this one transmitter. 
+*   **Limitation:** If you power on two models at the same time, they will both respond to your sticks simultaneously.
+*   **Best For:** A hobbyist who owns several models but only drives one at a time.
+
+### TX-Mega (The "Fleet Manager" Approach)
+The TX-Mega generates a unique **Pipe ID** for every model slot in its menu.
+*   **Model Isolation:** When you select "Model A" on the screen, the radio only talks to the receiver in "Model A."
+*   **Security:** You can have all your models powered on at once at a boat ramp/track; only the one currently selected on your screen will move.
+*   **Best For:** Advanced users with complex setups, different trim requirements, or multiple vehicles in the field at once.
+
+---
+
+## 🔌 Hardware Choice Guide
+
+1.  **Choose Simple TX if:**
+    *   You are building a basic robot or a single boat.
+    *   You are constrained by space (Nano/Uno footprint).
+    *   You prefer using physical switches for mixers.
+
+2.  **Choose TX-Mega if:**
+    *   You have a large fleet of models with different handling characteristics.
+    *   You want an on-screen display for battery voltage and signal strength.
+    *   You need digital trims and named model profiles (e.g., "Speedboat", "Tug").
+
+---
+
 ## 🎮 Transmitter (TX) Configurations
 
 ### Option A: Standard TX (Arduino Nano)
