@@ -33,14 +33,13 @@
 #include "model_settings.h"
 
 struct __attribute__((packed)) Payload {
-  byte channels[7]; // Array is much safer for loops than named members
-}payload;
+  byte channels[7];  // Array is much safer for loops than named members
+} payload;
 
 struct __attribute__((packed)) Telemetry {
   int rawVoltage;
   bool signalOk;
 } telemetry;
-
 
 // --- PINS (Advanced Mega Config) ---
 const int BUTTON_A_PIN = 2;
@@ -233,7 +232,7 @@ void read_inputs() {
   }
 
   // --- 3. FINAL OUTPUTS (Trims & Constrain) ---
-  
+
   // Apply safety lock
   if (throttleLocked) {
     out[1] = 127;
@@ -242,7 +241,8 @@ void read_inputs() {
 
   // Map to the Payload Array and apply trims
   for (int i = 0; i < 4; i++) {
-    payload.channels[i] = (byte)constrain(out[i] + currentModel.trims[i], 0, 255);
+    payload.channels[i] =
+        (byte)constrain(out[i] + currentModel.trims[i], 0, 255);
   }
 
   // Buttons and Status
@@ -340,6 +340,8 @@ void updateDisplay() {
 void setup() {
   Serial.begin(9600);
   u8g2.begin();
+
+  // 1. Hardware Pin Config
   pinMode(BUTTON_A_PIN, INPUT_PULLUP);
   pinMode(BUTTON_B_PIN, INPUT_PULLUP);
   pinMode(MIXER_PIN, INPUT_PULLUP);
@@ -348,6 +350,7 @@ void setup() {
   pinMode(TRIM_MINUS, INPUT_PULLUP);
   pinMode(TRIM_SELECT, INPUT_PULLUP);
 
+  // 2. Load Active Model Index from EEPROM
   EEPROM.get(1000, activeIndex);
   if (activeIndex < 0 || activeIndex >= 20) {
     activeIndex = 0;
@@ -356,13 +359,31 @@ void setup() {
 
   rxBatteryVoltage = 0;
 
+  // 3. MODEL SELECTION MENU (Hold Button B at boot)
   if (digitalRead(BUTTON_B_PIN) == LOW && digitalRead(BUTTON_A_PIN) == HIGH) {
     unsigned long selectStart = millis();
+
     while (millis() - selectStart < 5000) {
       if (digitalRead(BUTTON_B_PIN) == LOW) {
         activeIndex = (activeIndex + 1) % 20;
         loadModel(activeIndex);
+
+        // --- INITIALIZE EMPTY SLOTS AS 'DEFAULT' ---
+        if (currentModel.name[0] < 32 || currentModel.name[0] > 126) {
+          strcpy(currentModel.name, "Default");
+          currentModel.boatAddress = 0xE8E8F0F0E1LL + activeIndex;
+          currentModel.xMin = 0;
+          currentModel.xMax = 1023;
+          currentModel.yMin = 0;
+          currentModel.yMax = 1023;
+
+          for (int i = 0; i < 4; i++) currentModel.trims[i] = 0;
+
+          saveModel(activeIndex);
+        }
+
         u8g2.clearBuffer();
+        u8g2.setFont(u8g2_font_6x10_tf);
         u8g2.drawStr(10, 20, "MODEL SELECT:");
         u8g2.setCursor(10, 45);
         u8g2.print("[");
@@ -370,18 +391,21 @@ void setup() {
         u8g2.print("] ");
         u8g2.print(currentModel.name);
         u8g2.sendBuffer();
+
         tone(BUZZER_PIN, 1000, 50);
         delay(350);
-        selectStart = millis();
+        selectStart = millis();  // Reset timer on button press
       }
-    }
+    }  // end while (millis() - selectStart < 5000)
     EEPROM.put(1000, activeIndex);
   }
 
+  // 4. Load the Final Model Choice
   loadModel(activeIndex);
 
+  // --- FINAL FALLBACK: Initialize Slot if unformatted ---
   if (currentModel.name[0] < 32 || currentModel.name[0] > 126) {
-    strcpy(currentModel.name, "NEW MODEL");
+    strcpy(currentModel.name, "Default");
     currentModel.boatAddress = 0xE8E8F0F0E1LL + activeIndex;
     currentModel.xMin = 0;
     currentModel.xMax = 1023;
@@ -391,16 +415,20 @@ void setup() {
     saveModel(activeIndex);
   }
 
+  // 5. Special Startup Modes
   if (digitalRead(BUTTON_A_PIN) == LOW && digitalRead(BUTTON_B_PIN) == LOW)
-    handle_binding();
+    handle_binding();  // Both Buttons = BIND
   if (digitalRead(BUTTON_A_PIN) == LOW && digitalRead(BUTTON_B_PIN) == HIGH)
-    calibrate();
+    calibrate();  // Button A = CALIBRATE
 
+  // 6. Radio Initialization
   radio.begin();
   radio.setDataRate(RF24_250KBPS);
   radio.enableAckPayload();
   radio.openWritingPipe(currentModel.boatAddress);
   radio.stopListening();
+
+  tone(BUZZER_PIN, 1500, 100);  // Startup chirp
 }
 
 void loop() {
