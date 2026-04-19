@@ -1,7 +1,9 @@
 #include "mainwindow.h"
 
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QJsonDocument>
 #include <QMessageBox>
 #include <QSerialPortInfo>
 
@@ -34,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent)
           });
   connect(networkManager, &QNetworkAccessManager::finished, this,
           &MainWindow::onUpdateResponse);
+  connect(ui->actionCheck_for_Updates, &QAction::triggered, this,
+          &MainWindow::checkForUpdates);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -222,43 +226,43 @@ void MainWindow::refreshActiveListView() {
 
 void MainWindow::checkForUpdates() {
   // Replace with your actual GitHub repo path
-  QUrl url("https://github.com/kotori/avrrc");
+  QUrl url("https://api.github.com/repos/kotori/avrrc/releases/latest");
   QNetworkRequest request(url);
 
   // GitHub API requires a User-Agent header
   request.setHeader(QNetworkRequest::UserAgentHeader, "AVRRC-Manager");
   networkManager->get(request);
+  ui->statusbar->showMessage("Connecting to GitHub...");
 }
 
 void MainWindow::onUpdateResponse(QNetworkReply *reply) {
   if (reply->error() != QNetworkReply::NoError) {
-    ui->statusbar->showMessage("Update check failed.");
+    ui->statusbar->showMessage("Update check failed: " + reply->errorString());
     reply->deleteLater();
     return;
   }
 
-  // Parse the JSON response
-  QByteArray response = reply->readAll();
-  QJsonDocument doc = QJsonDocument::fromJson(response);
+  QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
   QJsonObject obj = doc.object();
 
-  QString latestTag = obj["tag_name"].toString();  // e.g., "v1.0.1"
-  QString currentTag = QString(APP_VERSION);       // From your CMake Git sync
+  QString latestTag = obj["tag_name"].toString();
+  QString currentTag = QString(APP_VERSION);
 
   if (!latestTag.isEmpty() && latestTag != currentTag) {
-    auto res = QMessageBox::information(
-        this, "Update Available",
-        QString("A new version (%1) is available! Your version: %2\n\nOpen "
-                "download page?")
-            .arg(latestTag)
-            .arg(currentTag),
-        QMessageBox::Yes | QMessageBox::No);
+    auto res =
+        QMessageBox::information(this, "Update Available",
+                                 QString("New version (%1) available!\nYour "
+                                         "version: %2\n\nOpen download page?")
+                                     .arg(latestTag)
+                                     .arg(currentTag),
+                                 QMessageBox::Yes | QMessageBox::No);
 
     if (res == QMessageBox::Yes) {
       QDesktopServices::openUrl(QUrl(obj["html_url"].toString()));
     }
   } else {
-    ui->statusbar->showMessage("You are running the latest version.");
+    ui->statusbar->showMessage("You are running the latest version: " +
+                               currentTag);
   }
   reply->deleteLater();
 }
