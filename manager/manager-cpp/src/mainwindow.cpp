@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
   networkManager = new QNetworkAccessManager(this);
 
   // Sync the window title with the Git version
-  this->setWindowTitle("AVRRC Manager - v" + QString(APP_VERSION));
+  this->setWindowTitle("AVRRC Ensign | Fleet Management - v" + QString(APP_VERSION));
 
   // 1. Initial Device Scan
   refreshPorts();
@@ -270,11 +270,10 @@ void MainWindow::onUpdateResponse(QNetworkReply *reply) {
 // At the bottom of mainwindow.cpp
 void MainWindow::on_actionAbout_triggered() {
     QString aboutText = QString(
-        "<h3>AVRRC Model Manager</h3>"
+        "<h3>AVRRC Ensign</h3>"
         "<p><b>Version:</b> %1</p>"
-        "<p><b>Author:</b> Kotori</p>"
-        "<p>A professional fleet management tool for the AVR-RC radio ecosystem. "
-        "Built for Nano, Uno, Mega, and Linux-sync compatible hardware.</p>"
+        "<p><b>Fleet Logistics:</b> Kotori</p>"
+        "<p>The central hub for identifying and managing the AVR-RC fleet.</p>"
         "<p><a href='https://github.com/kotori/avrrc'>AVRRC Repository</a></p>"
     ).arg(APP_VERSION);
 
