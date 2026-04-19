@@ -266,3 +266,17 @@ void MainWindow::onUpdateResponse(QNetworkReply *reply) {
   }
   reply->deleteLater();
 }
+
+// At the bottom of mainwindow.cpp
+void MainWindow::on_actionAbout_triggered() {
+    QString aboutText = QString(
+        "<h3>AVRRC Model Manager</h3>"
+        "<p><b>Version:</b> %1</p>"
+        "<p><b>Author:</b> Kotori</p>"
+        "<p>A professional fleet management tool for the AVR-RC radio ecosystem. "
+        "Built for Nano, Uno, Mega, and Linux-sync compatible hardware.</p>"
+        "<p><a href='https://github.com/kotori/avrrc'>AVRRC Repository</a></p>"
+    ).arg(APP_VERSION);
+
+    QMessageBox::about(this, "About AVRRC Manager", aboutText);
+}
