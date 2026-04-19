@@ -33,5 +33,6 @@
 
 .idea/*.xml
 build/**/*
+/*/*/build/
 bin/*
 lib/*
