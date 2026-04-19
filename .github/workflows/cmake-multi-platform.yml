@@ -14,9 +14,9 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         include:
           - os: windows-latest
-            artifact_name: AVRRC-Manager-Windows.zip
+            artifact_name: AVRRC-Ensign-Windows.zip
           - os: ubuntu-latest
-            artifact_name: AVRRC-Manager-Linux
+            artifact_name: AVRRC-Ensign-Linux
 
     steps:
     - uses: actions/checkout@v4
@@ -47,18 +47,18 @@ jobs:
       shell: pwsh
       run: |
         cd build/Release
-        windeployqt AVRRC_Manager.exe --no-translations --compiler-runtime
-        Compress-Archive -Path * -DestinationPath ../../AVRRC-Manager-Windows.zip
+        windeployqt AVRRC_Ensign.exe --no-translations --compiler-runtime
+        Compress-Archive -Path * -DestinationPath ../../AVRRC-Ensign-Windows.zip
 
     - name: Linux Deployment
       if: runner.os == 'Linux'
-      run: cp manager/manager-cpp/build/AVRRC_Manager AVRRC-Manager-Linux
+      run: cp manager/manager-cpp/build/AVRRC_Ensign AVRRC-Ensign-Linux
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
-        path: ${{ matrix.artifact_name }}
+        path: manager/manager-cpp/${{ matrix.artifact_name }}
 
   release:
     needs: build
@@ -76,8 +76,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            AVRRC-Manager-Windows.zip/AVRRC-Manager-Windows.zip
-            AVRRC-Manager-Linux/AVRRC-Manager-Linux
+            AVRRC-Ensign-Windows.zip/AVRRC-Ensign-Windows.zip
+            AVRRC-Ensign-Linux/AVRRC-Ensign-Linux
           draft: false
           prerelease: false
         env:

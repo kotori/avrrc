@@ -27,7 +27,7 @@ if(NOT GIT_VERSION)
 endif()
 add_definitions(-DAPP_VERSION="${GIT_VERSION}")
 
-message(STATUS "AVRRC Manager Build Version: ${GIT_VERSION}")
+message(STATUS "AVRRC Ensign Build Version: ${GIT_VERSION}")
 
 # --- 2. WINDOWS SPECIFIC RESOURCES ---
 if(WIN32)
@@ -51,17 +51,17 @@ set(PROJECT_SOURCES
 
 # --- 3. CREATE EXECUTABLE ---
 # WIN32 flag is ignored on Linux, but required for GUI apps on Windows
-add_executable(AVRRC_Manager WIN32 ${PROJECT_SOURCES})
+add_executable(AVRRC_Ensign WIN32 ${PROJECT_SOURCES})
 
-target_link_libraries(AVRRC_Manager PRIVATE Qt6::Widgets Qt6::SerialPort Qt6::Sql Qt6::Network)
-target_include_directories(AVRRC_Manager PRIVATE src)
+target_link_libraries(AVRRC_Ensign PRIVATE Qt6::Widgets Qt6::SerialPort Qt6::Sql Qt6::Network)
+target_include_directories(AVRRC_Ensign PRIVATE src)
 
 # --- 4. WINDOWS DEPLOYMENT (DLL Bundling) ---
 if(WIN32)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../../bin")
     if(WINDEPLOYQT_EXECUTABLE)
-        add_custom_command(TARGET AVRRC_Manager POST_BUILD
-            COMMAND "${WINDEPLOYQT_EXECUTABLE}" "$<TARGET_FILE:AVRRC_Manager>"
+        add_custom_command(TARGET AVRRC_Ensign POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}" "$<TARGET_FILE:AVRRC_Ensign>"
             COMMENT "Bundling Windows DLLs..."
         )
     endif()
@@ -69,5 +69,5 @@ endif()
 
 # --- 5. LINUX INSTALLATION ---
 if(UNIX AND NOT APPLE)
-    install(TARGETS AVRRC_Manager RUNTIME DESTINATION bin)
+    install(TARGETS AVRRC_Ensign RUNTIME DESTINATION bin)
 endif()
