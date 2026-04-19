@@ -298,8 +298,12 @@ void MainWindow::updateConnectionStatus(bool connected) {
     if (connected) {
         statusLamp->setText(" ● CONNECTED ");
         statusLamp->setStyleSheet("color: #27AE60; font-weight: bold; padding-right: 10px;"); // Sea Green
+
+        statusLamp->setToolTip("Serial Link Established: Ensign is communicating with the TX.");
     } else {
         statusLamp->setText(" ● DISCONNECTED ");
         statusLamp->setStyleSheet("color: #E74C3C; font-weight: bold; padding-right: 10px;"); // Nautical Red
+
+        statusLamp->setToolTip("No Hardware Link: USB connection was lost.");
     }
 }
