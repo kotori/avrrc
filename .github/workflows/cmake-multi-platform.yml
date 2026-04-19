@@ -29,7 +29,7 @@ jobs:
         version: '6.5.3' # A very stable Qt6 LTS version
         host: ${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}
         target: 'desktop'
-        modules: 'qtserialport qtsql'
+        modules: 'qtserialport'
 
     - name: Linux Deps
       if: runner.os == 'Linux'
