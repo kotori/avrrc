@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>AVRRC Stealth Brick Manager</string>
+   <string>AVRRC Ensign | Fleet Management</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="mainLayout">
@@ -85,7 +85,7 @@
       </widget>
       <widget class="QWidget" name="libraryTab">
        <attribute name="title">
-        <string>Infinite Library (SQL)</string>
+        <string>Library (SQL)</string>
        </attribute>
        <layout class="QVBoxLayout" name="libraryLayout">
         <item>
@@ -161,6 +161,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionCheck_for_Updates"/>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuHelp"/>
   </widget>
@@ -168,6 +169,11 @@
   <action name="actionCheck_for_Updates">
    <property name="text">
     <string>Check for Updates...</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About...</string>
    </property>
   </action>
  </widget>
