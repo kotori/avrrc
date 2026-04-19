@@ -3,7 +3,7 @@ name: Multi-Platform Build & Release
 on:
   push:
     branches: [ "main" ]
-    tags: [ 'v*' ] # Triggers release logic on tags like v1.0.0
+    tags: [ '*RELEASE*' ] # Triggers release logic on tags like v1.0.0
 
 jobs:
   build:
@@ -36,12 +36,14 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libxkbcommon-dev
 
     - name: Build
+      working-directory: manager/manager-cpp
       run: |
         cmake -B build -DCMAKE_BUILD_TYPE=Release
         cmake --build build --config Release
 
     - name: Windows Deployment (Zip)
       if: runner.os == 'Windows'
+      working-directory: manager/manager-cpp
       shell: pwsh
       run: |
         cd build/Release
@@ -50,7 +52,7 @@ jobs:
 
     - name: Linux Deployment
       if: runner.os == 'Linux'
-      run: cp build/AVRRC_Manager AVRRC-Manager-Linux
+      run: cp manager/manager-cpp/build/AVRRC_Manager AVRRC-Manager-Linux
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
@@ -60,7 +62,9 @@ jobs:
 
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Strict gate: only run if the tag contains 'RELEASE' 
+    # AND it was pushed on the main branch
+    if: contains(github.ref, 'RELEASE') && github.event.base_ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
