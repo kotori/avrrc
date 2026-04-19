@@ -26,7 +26,9 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.5.0'
+        version: '6.5.3' # A very stable Qt6 LTS version
+        host: ${{ matrix.os == 'windows-latest' && 'windows' || 'linux' }}
+        target: 'desktop'
         modules: 'qtserialport qtsql'
 
     - name: Linux Deps
