@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets SerialPort Sql)
+find_package(Qt6 REQUIRED COMPONENTS Widgets SerialPort Sql Network)
 
 # --- 1. GIT VERSIONING (Cross-Platform) ---
 find_package(Git QUIET)
@@ -53,7 +53,7 @@ set(PROJECT_SOURCES
 # WIN32 flag is ignored on Linux, but required for GUI apps on Windows
 add_executable(AVRRC_Manager WIN32 ${PROJECT_SOURCES})
 
-target_link_libraries(AVRRC_Manager PRIVATE Qt6::Widgets Qt6::SerialPort Qt6::Sql)
+target_link_libraries(AVRRC_Manager PRIVATE Qt6::Widgets Qt6::SerialPort Qt6::Sql Qt6::Network)
 target_include_directories(AVRRC_Manager PRIVATE src)
 
 # --- 4. WINDOWS DEPLOYMENT (DLL Bundling) ---
