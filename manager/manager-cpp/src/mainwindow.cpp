@@ -6,32 +6,35 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QInputDialog>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QSerialPortInfo>
+
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
+    // Sync the window title with the Git version
+    this->setWindowTitle("AVRRC Manager - v" + QString(APP_VERSION));
+
     // 1. Initial Device Scan
     refreshPorts();
 
     // 2. Initial UI Population
-    // Pull current data from the local memory and the SQL database
     refreshActiveListView();
     updateLibraryListView();
 
     // 3. Connect Signals & Slots
-    
-    // Progress Bar: Link FleetManager's progress to the UI bar
     connect(&fleetManager, &FleetManager::progressUpdated, ui->progressBar, &QProgressBar::setValue);
-
-    // Search Bar: Every time the user types, filter the Library Tab
     connect(ui->searchEdit, &QLineEdit::textChanged, this, &MainWindow::updateLibraryListView);
-
-    // Status Messages: If the logic sends a message, show it in the status bar
-    // Use a Lambda to bridge the signal to the status bar
     connect(&fleetManager, &FleetManager::statusMessage, ui->statusbar, [this](const QString &message) {
-      ui->statusbar->showMessage(message, 5000); // Show message for 5 seconds
+      ui->statusbar->showMessage(message, 5000); 
     });
 }
 
@@ -42,21 +45,27 @@ MainWindow::~MainWindow() {
 void MainWindow::refreshPorts() {
     ui->portCombo->clear();
 
-    // Get a list of all available serial ports on the Debian system
+    // Cross-platform scan (Works on Linux /dev/tty and Windows COMx)
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
 
     for (const QSerialPortInfo &portInfo : serialPortInfos) {
-        QString portName = portInfo.portName(); // e.g. "ttyUSB0"
+        QString portName = portInfo.portName(); 
         QString description = portInfo.description();
+        
+        // Sane naming: If description exists, use it. Otherwise, just show the port.
+        QString displayName = portName;
+        if (!description.isEmpty()) {
+            displayName += " (" + description + ")";
+        }
 
-        // Add to dropdown: "ttyUSB0 (Arduino Mega 2560)"
-        ui->portCombo->addItem(portName + " (" + description + ")", portName);
+        // Store the raw port name (COM3 or ttyUSB0) in UserRole
+        ui->portCombo->addItem(displayName, portName);
     }
 
     if (ui->portCombo->count() == 0) {
-        ui->statusbar->showMessage("No devices found. Check USB connection.");
+        ui->statusbar->showMessage("No Serial devices found. Check your USB connection.");
     } else {
-        ui->statusbar->showMessage("Found " + QString::number(ui->portCombo->count()) + " ports.");
+        ui->statusbar->showMessage("Found " + QString::number(ui->portCombo->count()) + " available ports.");
     }
 }
 
@@ -92,15 +101,19 @@ void MainWindow::on_deleteBtn_clicked() {
 }
 
 void MainWindow::on_syncGetBtn_clicked() {
+    // Correctly pulls "COM3" or "ttyUSB0" regardless of the "Pretty Name" displayed
     QString port = ui->portCombo->currentData().toString();
-    if (port.isEmpty()) return;
+    if (port.isEmpty()) {
+        ui->statusbar->showMessage("Select a port first!");
+        return;
+    }
 
     ui->statusbar->showMessage("Syncing from Transmitter...");
     if (fleetManager.syncFromTX(port)) {
         refreshActiveListView();
         ui->statusbar->showMessage("Sync Complete!");
     } else {
-        ui->statusbar->showMessage("Sync Failed!");
+        ui->statusbar->showMessage("Sync Failed! Check connection.");
     }
 }
 
@@ -194,8 +207,8 @@ void MainWindow::on_loadJsonBtn_clicked() {
 void MainWindow::refreshActiveListView() {
     ui->modelList->clear();
     // Fetch the 20 names (with dates) from the SQLite-aware helper
-    QStringList names = fleetManager.getLocalModelNames(); 
-    for(int i = 0; i < names.size(); ++i) {
+    QStringList names = fleetManager.getLocalModelNames();
+    for(int i = 0; i < (int)names.size(); ++i) { // Cast to int for Windows compiler safety
         ui->modelList->addItem(names[i]);
     }
 }
