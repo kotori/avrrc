@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     // 2. Set Application Metadata (Useful for Linux Desktop integration)
-    app.setApplicationName("AVRRC Manager");
+    app.setApplicationName("AVRRC Ensign");
     app.setOrganizationName("Kotori");
     app.setApplicationVersion(APP_VERSION);
 

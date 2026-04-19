@@ -18,12 +18,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",      "Kotori"
-            VALUE "FileDescription",  "AVRRC Fleet Manager"
+            VALUE "FileDescription",  "AVRRC Ensign Fleet Management"
             VALUE "FileVersion",      "0.1.0.0"
-            VALUE "InternalName",     "AVRRC_Manager"
-            VALUE "LegalCopyright",   "Copyright (C) 2024"
-            VALUE "OriginalFilename", "AVRRC_Manager.exe"
-            VALUE "ProductName",      "AVRRC System"
+            VALUE "InternalName",     "AVRRC_Ensign"
+            VALUE "LegalCopyright",   "Copyright (C) 2026"
+            VALUE "OriginalFilename", "AVRRC_Ensign.exe"
+            VALUE "ProductName",      "AVRRC Ensign"
             VALUE "ProductVersion",   "0.1.0.0"
         END
     END
