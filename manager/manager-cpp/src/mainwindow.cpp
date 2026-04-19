@@ -40,6 +40,14 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::checkForUpdates);
   connect(ui->actionAbout, &QAction::triggered, this,
           &MainWindow::showAboutDialog);
+
+  // 1. Create the lamp
+  statusLamp = new QLabel(" ● DISCONNECTED ");
+  statusLamp->setStyleSheet("color: #E74C3C; font-weight: bold; padding-right: 10px;"); // Red
+
+  // 2. Add it to the status bar (right-aligned)
+  ui->statusbar->addPermanentWidget(statusLamp);
+  updateConnectionStatus(false); // set the lamp to DISCONNECTED by default.
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -116,9 +124,11 @@ void MainWindow::on_syncGetBtn_clicked() {
 
   ui->statusbar->showMessage("Syncing from Transmitter...");
   if (fleetManager.syncFromTX(port)) {
+    updateConnectionStatus(true); // Green!
     refreshActiveListView();
     ui->statusbar->showMessage("Sync Complete!");
   } else {
+    updateConnectionStatus(false); // Red!
     ui->statusbar->showMessage("Sync Failed! Check connection.");
   }
 }
@@ -282,4 +292,14 @@ void MainWindow::showAboutDialog() {
     ).arg(APP_VERSION).arg(BUILD_DATE);
 
     QMessageBox::about(this, "About AVRRC Ensign", aboutText);
+}
+
+void MainWindow::updateConnectionStatus(bool connected) {
+    if (connected) {
+        statusLamp->setText(" ● CONNECTED ");
+        statusLamp->setStyleSheet("color: #27AE60; font-weight: bold; padding-right: 10px;"); // Sea Green
+    } else {
+        statusLamp->setText(" ● DISCONNECTED ");
+        statusLamp->setStyleSheet("color: #E74C3C; font-weight: bold; padding-right: 10px;"); // Nautical Red
+    }
 }

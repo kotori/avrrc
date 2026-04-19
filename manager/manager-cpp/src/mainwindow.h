@@ -49,6 +49,8 @@ class MainWindow : public QMainWindow {
   Ui::MainWindow *ui;
   FleetManager fleetManager;
 
+  QLabel *statusLamp;
+  void updateConnectionStatus(bool connected);
   QNetworkAccessManager *networkManager;
 
   // UI Refresh Helpers
