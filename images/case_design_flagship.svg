@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400mm" height="300mm" viewBox="0 0 400 300">
+  <!-- 1. LODESTAR FACEPLATE (Flagship Mega) -->
+  <g id="Lodestar_Faceplate">
+    <rect x="10" y="10" width="180" height="150" rx="15" ry="15" fill="none" stroke="blue" stroke-width="0.5"/>
+    <!-- Alignment Dowels (1/4") - Cut these FIRST -->
+    <circle cx="20" cy="20" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <circle cx="180" cy="20" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <circle cx="20" cy="150" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <circle cx="180" cy="150" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <!-- Joystick Cutouts (28mm) -->
+    <circle cx="55" cy="85" r="14" fill="none" stroke="red" stroke-width="0.5"/>
+    <circle cx="145" cy="85" r="14" fill="none" stroke="red" stroke-width="0.5"/>
+    <!-- Toggle Switches & LED (6.5mm) -->
+    <circle cx="85" cy="30" r="3.25" fill="none" stroke="red" stroke-width="0.5"/>
+    <circle cx="95" cy="30" r="3.25" fill="none" stroke="red" stroke-width="0.5"/>
+    <circle cx="105" cy="30" r="3.25" fill="none" stroke="red" stroke-width="0.5"/>
+    <circle cx="115" cy="30" r="3.25" fill="none" stroke="red" stroke-width="0.5"/>
+    <!-- External SMA Antenna Port -->
+    <circle cx="100" cy="15" r="3.25" fill="none" stroke="red" stroke-width="0.5"/>
+    <!-- Branding Engravings (Set to 1mm Depth) -->
+    <text x="100" y="55" font-family="Arial, sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="green">AVRRC LODESTAR</text>
+    <text x="100" y="140" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" font-style="italic" fill="green">FLEET COMMAND | BY KOTORI</text>
+  </g>
+
+  <!-- 2. INTERNAL RING (Stack 11 copies) -->
+  <g id="Internal_Ring" transform="translate(200, 0)">
+    <rect x="10" y="10" width="180" height="150" rx="15" ry="15" fill="none" stroke="blue" stroke-width="0.5"/>
+    <!-- 25mm wall safety margin for ergonomic beveling -->
+    <rect x="35" y="35" width="130" height="100" rx="10" ry="10" fill="none" stroke="red" stroke-width="0.5"/>
+    <circle cx="20" cy="20" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <circle cx="180" cy="20" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <circle cx="20" cy="150" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+    <circle cx="180" cy="150" r="3.175" fill="none" stroke="magenta" stroke-width="0.5"/>
+  </g>
+</svg>
