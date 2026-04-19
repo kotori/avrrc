@@ -27,6 +27,10 @@ if(NOT GIT_VERSION)
 endif()
 add_definitions(-DAPP_VERSION="${GIT_VERSION}")
 
+# --- CAPTURE BUILD DATE ---
+string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M:%S")
+add_definitions(-DBUILD_DATE="${BUILD_DATE}")
+
 message(STATUS "AVRRC Ensign Build Version: ${GIT_VERSION}")
 
 # --- 2. WINDOWS SPECIFIC RESOURCES ---

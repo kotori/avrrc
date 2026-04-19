@@ -38,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::onUpdateResponse);
   connect(ui->actionCheck_for_Updates, &QAction::triggered, this,
           &MainWindow::checkForUpdates);
+  connect(ui->actionAbout, &QAction::triggered, this,
+          &MainWindow::on_actionAbout_triggered);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -267,15 +269,17 @@ void MainWindow::onUpdateResponse(QNetworkReply *reply) {
   reply->deleteLater();
 }
 
-// At the bottom of mainwindow.cpp
 void MainWindow::on_actionAbout_triggered() {
     QString aboutText = QString(
         "<h3>AVRRC Ensign</h3>"
         "<p><b>Version:</b> %1</p>"
+        "<p><b>Build Date:</b> %2</p>"
         "<p><b>Fleet Logistics:</b> Kotori</p>"
-        "<p>The central hub for identifying and managing the AVR-RC fleet.</p>"
-        "<p><a href='https://github.com/kotori/avrrc'>AVRRC Repository</a></p>"
-    ).arg(APP_VERSION);
+        "<hr>"
+        "<p>Professional fleet management for the AVR-RC ecosystem.<br>"
+        "Compatible with Nano, Mega, and Linux-sync hardware.</p>"
+        "<p><a href='https://github.com/kotori/avrrc'>Visit Project Repository</a></p>"
+    ).arg(APP_VERSION).arg(BUILD_DATE);
 
-    QMessageBox::about(this, "About AVRRC Manager", aboutText);
+    QMessageBox::about(this, "About AVRRC Ensign", aboutText);
 }
