@@ -1,0 +1,78 @@
+name: Multi-Platform Build & Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ 'v*' ] # Triggers release logic on tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: windows-latest
+            artifact_name: AVRRC-Manager-Windows.zip
+          - os: ubuntu-latest
+            artifact_name: AVRRC-Manager-Linux
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.0'
+        modules: 'qtserialport qtsql'
+
+    - name: Linux Deps
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libxkbcommon-dev
+
+    - name: Build
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --config Release
+
+    - name: Windows Deployment (Zip)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        cd build/Release
+        windeployqt AVRRC_Manager.exe --no-translations --compiler-runtime
+        Compress-Archive -Path * -DestinationPath ../../AVRRC-Manager-Windows.zip
+
+    - name: Linux Deployment
+      if: runner.os == 'Linux'
+      run: cp build/AVRRC_Manager AVRRC-Manager-Linux
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.artifact_name }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            AVRRC-Manager-Windows.zip/AVRRC-Manager-Windows.zip
+            AVRRC-Manager-Linux/AVRRC-Manager-Linux
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
