@@ -43,7 +43,7 @@ class MainWindow : public QMainWindow {
   void checkForUpdates();                       // Parse our repo for updates.
   void onUpdateResponse(QNetworkReply *reply);  // Parse update response.
 
-  void on_actionAbout_triggered();  // Triggered by the Menu Bar
+  void showAboutDialog();  // Triggered by the Menu Bar
 
  private:
   Ui::MainWindow *ui;

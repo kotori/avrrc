@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionCheck_for_Updates, &QAction::triggered, this,
           &MainWindow::checkForUpdates);
   connect(ui->actionAbout, &QAction::triggered, this,
-          &MainWindow::on_actionAbout_triggered);
+          &MainWindow::showAboutDialog);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -269,12 +269,12 @@ void MainWindow::onUpdateResponse(QNetworkReply *reply) {
   reply->deleteLater();
 }
 
-void MainWindow::on_actionAbout_triggered() {
+void MainWindow::showAboutDialog() {
     QString aboutText = QString(
         "<h3>AVRRC Ensign</h3>"
         "<p><b>Version:</b> %1</p>"
         "<p><b>Build Date:</b> %2</p>"
-        "<p><b>Fleet Logistics:</b> Kotori</p>"
+        "<p><b>Fleet Logistics Officer:</b> Kotori</p>"
         "<hr>"
         "<p>Professional fleet management for the AVR-RC ecosystem.<br>"
         "Compatible with Nano, Mega, and Linux-sync hardware.</p>"
